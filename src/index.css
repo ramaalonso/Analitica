@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-yerba-verde: #0f4b25;
+  --color-yerba-crema: #ece7d7;
+  --color-yerba-naranja: #e68628;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #f7f5ed;
+  color: #1c2826;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ede9dc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7beaa;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0f4b25;
+}
+
+/* Print styles for executive reporting */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .shadow-md, .shadow-lg, .shadow-sm {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
