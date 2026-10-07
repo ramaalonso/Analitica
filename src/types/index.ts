@@ -153,6 +153,10 @@ export interface ComboOpportunity {
   razonamiento: string;
   motivoSugerencia?: string;
   categoriaEstrategica?: 'todos' | 'estrellas' | 'duos' | 'liquidacion' | 'kits' | 'fidelizacion' | 'ofertas_web';
+  itemsDesglose?: {
+    nombre: string;
+    precioRegular: number;
+  }[];
 }
 
 export interface ProxCompraRow {

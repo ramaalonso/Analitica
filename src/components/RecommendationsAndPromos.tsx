@@ -809,10 +809,11 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
             const gainWithCoupon = priceWithCoupon - combo.costoTotal;
             const marginWithCoupon = priceWithCoupon > 0 ? parseFloat(((gainWithCoupon / priceWithCoupon) * 100).toFixed(1)) : 0;
 
-            const webLinkText = activeCoupon 
-              ? `\n🏷️ ¡Comprando en yerbazo.com.ar podés sumar el cupón "${activeCoupon.code}" para un ${activeCoupon.discount}% OFF adicional!\n🛒 Web: https://yerbazo.com.ar/` 
-              : '\n🛒 Hacé tu pedido directo en: https://yerbazo.com.ar/';
-            const pitch = `🌿 ¡PROMO ESPECIAL EN YERBAZO! 🌿\nLlevate el ${combo.titulo} a un precio imperdible:\n🔥 Antes: $${combo.precioRegularTotal.toLocaleString('es-AR')}\n✨ Precio Promo: $${customPrice.toLocaleString('es-AR')} (${currentDiscount}% OFF)\n📦 Incluye: ${combo.productoPrincipal} + ${combo.productoSecundario}${combo.productoTerciario ? ` + ${combo.productoTerciario}` : ''}${webLinkText}\n¡Escribinos por privado o hacé tu pedido online!`;
+            const savingsAmount = combo.precioRegularTotal - customPrice;
+            const itemsText = combo.itemsDesglose && combo.itemsDesglose.length > 0
+              ? combo.itemsDesglose.map(it => `• ${it.nombre} ($${it.precioRegular.toLocaleString('es-AR')})`).join('\n')
+              : `• ${combo.productoPrincipal}\n• ${combo.productoSecundario}${combo.productoTerciario ? `\n• ${combo.productoTerciario}` : ''}`;
+            const pitch = `🌿 ¡PROMO ESPECIAL EN YERBAZO! 🌿\nLlevate el ${combo.titulo} a un precio imperdible:\n🔥 Precio regular por separado: $${combo.precioRegularTotal.toLocaleString('es-AR')}\n${itemsText}\n✨ Precio Promo: $${customPrice.toLocaleString('es-AR')} (${currentDiscount}% OFF)\n💰 ¡Ahorrás $${savingsAmount.toLocaleString('es-AR')}!${webLinkText}\n¡Escribinos por privado o hacé tu pedido online!`;
 
             return (
               <div 
@@ -913,9 +914,21 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
                   {/* Price comparison card */}
                   <div className="bg-white rounded-2xl p-4 border border-stone-200/80 mb-4 shadow-2xs space-y-3">
                     
-                    <div className="flex items-center justify-between text-xs text-stone-500">
-                      <span>Precio regular por separado:</span>
-                      <span className="line-through font-semibold">${combo.precioRegularTotal.toLocaleString('es-AR')}</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-stone-600 font-bold">
+                        <span>Suma regular por separado:</span>
+                        <span className="line-through font-black text-stone-800">${combo.precioRegularTotal.toLocaleString('es-AR')}</span>
+                      </div>
+                      {combo.itemsDesglose && combo.itemsDesglose.length > 0 && (
+                        <div className="bg-stone-50 p-2 rounded-xl text-[11px] text-stone-600 space-y-0.5 border border-stone-200/60 font-sans">
+                          {combo.itemsDesglose.map((it, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span className="truncate max-w-[200px] text-stone-500">• {it.nombre}</span>
+                              <span className="font-semibold text-stone-700 font-mono">${it.precioRegular.toLocaleString('es-AR')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between border-t border-stone-100 pt-2">

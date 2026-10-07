@@ -432,9 +432,16 @@ export function generateSmartCombos(
   const coupon10 = activeCoupons.find(c => c.discount === 10)?.code || (activeCoupons.length > 0 ? activeCoupons[0].code : undefined);
   const coupon20 = activeCoupons.find(c => c.discount === 20)?.code || (activeCoupons.length > 1 ? activeCoupons[1].code : (activeCoupons.length > 0 ? activeCoupons[0].code : undefined));
 
-  // Helper to get real online retail price if available, else average sales price
+  // Helper to get official regular sale price strictly from Google Sheets (sheet "Stock")
   const getRegularPrice = (p: ProductPerformance): number => {
-    return p.precioWeb || p.precioVentaPromedio;
+    const catProd = catalog.find(c => c.nombreNormalizado === p.producto);
+    if (catProd && catProd.precioVenta > 0) {
+      return catProd.precioVenta;
+    }
+    if (p.precioVentaPromedio && p.precioVentaPromedio > 0) {
+      return p.precioVentaPromedio;
+    }
+    return p.precioWeb || 0;
   };
 
   // Categorize products based on month's performance and inventory
@@ -522,7 +529,11 @@ export function generateSmartCombos(
       gananciaEstimada: gain,
       margenPorc: margin,
       motivoSugerencia: `${star1.nombreOriginal} acumula ${star1.unidadesVendidas} unidades vendidas este mes.`,
-      razonamiento: `Apalanca el flujo de ventas de tu yerba líder para traccionar la venta de accesorios, elevando el ticket promedio a $${comboPrice.toLocaleString('es-AR')}.`
+      razonamiento: `Apalanca el flujo de ventas de tu yerba líder para traccionar la venta de accesorios, elevando el ticket promedio a $${comboPrice.toLocaleString('es-AR')}.`,
+      itemsDesglose: [
+        { nombre: star1.nombreOriginal, precioRegular: getRegularPrice(star1) },
+        { nombre: acc1.nombreOriginal, precioRegular: getRegularPrice(acc1) }
+      ]
     });
   }
 
@@ -553,7 +564,11 @@ export function generateSmartCombos(
       gananciaEstimada: gain,
       margenPorc: margin,
       motivoSugerencia: `${marginYerba.nombreOriginal} ofrece un excelente margen (${marginYerba.margenPorc.toFixed(0)}%) que compensa ampliamente el descuento.`,
-      razonamiento: `Convierte compradores de una sola marca en clientes multivariedad, logrando una ganancia líquida de $${gain.toLocaleString('es-AR')} por combo.`
+      razonamiento: `Convierte compradores de una sola marca en clientes multivariedad, logrando una ganancia líquida de $${gain.toLocaleString('es-AR')} por combo.`,
+      itemsDesglose: [
+        { nombre: star2.nombreOriginal, precioRegular: getRegularPrice(star2) },
+        { nombre: marginYerba.nombreOriginal, precioRegular: getRegularPrice(marginYerba) }
+      ]
     });
   }
 
@@ -584,7 +599,11 @@ export function generateSmartCombos(
       gananciaEstimada: gain,
       margenPorc: margin,
       motivoSugerencia: `Hay ${slowItem.stockActual} unidades en depósito de ${slowItem.nombreOriginal} con baja rotación.`,
-      razonamiento: `Es más rentable recuperar liquidez inmediata y reinvertirla en yerbas de alta rotación que mantener stock estacionado acumulando costo de oportunidad.`
+      razonamiento: `Es más rentable recuperar liquidez inmediata y reinvertirla en yerbas de alta rotación que mantener stock estacionado acumulando costo de oportunidad.`,
+      itemsDesglose: [
+        { nombre: slowItem.nombreOriginal, precioRegular: getRegularPrice(slowItem) },
+        { nombre: highMarginSubsidizer.nombreOriginal, precioRegular: getRegularPrice(highMarginSubsidizer) }
+      ]
     });
   }
 
@@ -618,12 +637,16 @@ export function generateSmartCombos(
       gananciaEstimada: gain,
       margenPorc: margin,
       motivoSugerencia: `Maximiza el ticket de venta a más de $${comboPrice.toLocaleString('es-AR')}, ideal para regalos o nuevos clientes.`,
-      razonamiento: `Genera una ganancia neta récord de $${gain.toLocaleString('es-AR')} en un único despacho, ahorrando costos logísticos de empaque.`
+      razonamiento: `Genera una ganancia neta récord de $${gain.toLocaleString('es-AR')} en un único despacho, ahorrando costos logísticos de empaque.`,
+      itemsDesglose: [
+        { nombre: star4.nombreOriginal, precioRegular: getRegularPrice(star4) },
+        { nombre: acc2.nombreOriginal, precioRegular: getRegularPrice(acc2) },
+        ...(acc3 ? [{ nombre: acc3.nombreOriginal, precioRegular: getRegularPrice(acc3) }] : [])
+      ]
     });
   }
 
   // COMBO 5: Doble Pack Fidelización (2x Yerba de Margen Sostenible)
-  // Priorizar yerbas con margen suficiente para soportar descuentos 2x (>= 18%)
   const fidelizacionYerba = highMarginYerbas.find(y => y.stockActual >= 4) || star1;
   if (fidelizacionYerba && fidelizacionYerba.stockActual >= 2) {
     const regTotal = getRegularPrice(fidelizacionYerba) * 2;
@@ -649,7 +672,11 @@ export function generateSmartCombos(
       gananciaEstimada: gain,
       margenPorc: margin,
       motivoSugerencia: `${fidelizacionYerba.nombreOriginal} tiene stock suficiente (${fidelizacionYerba.stockActual} u.) para abastecer compras duplicadas.`,
-      razonamiento: `Fideliza al consumidor por 30-45 días, cerrándole la puerta a competidores y asegurando una ganancia neta de $${gain.toLocaleString('es-AR')}.`
+      razonamiento: `Fideliza al consumidor por 30-45 días, cerrándole la puerta a competidores y asegurando una ganancia neta de $${gain.toLocaleString('es-AR')}.`,
+      itemsDesglose: [
+        { nombre: `${fidelizacionYerba.nombreOriginal} (Unidad 1)`, precioRegular: getRegularPrice(fidelizacionYerba) },
+        { nombre: `${fidelizacionYerba.nombreOriginal} (Unidad 2)`, precioRegular: getRegularPrice(fidelizacionYerba) }
+      ]
     });
   }
 
@@ -659,7 +686,6 @@ export function generateSmartCombos(
   if (canarias && baldo && canarias.producto !== baldo.producto) {
     const regTotal = getRegularPrice(canarias) + getRegularPrice(baldo);
     const costoTotal = canarias.precioCompra + baldo.precioCompra;
-    // Calibrar descuento moderado para que en venta directa WA mantenga >10% de ganancia
     const discount = 4;
     const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
     const gain = comboPrice - costoTotal;
@@ -684,7 +710,11 @@ export function generateSmartCombos(
       gananciaEstimada: gain,
       margenPorc: parseFloat(margin.toFixed(1)),
       motivoSugerencia: `Ambas marcas lideran el volumen de ventas del mes.`,
-      razonamiento: `Es la combinación con menor resistencia a la compra. El cliente siente que aprovecha una oportunidad única sobre productos que compraría de todos modos.`
+      razonamiento: `Es la combinación con menor resistencia a la compra. El cliente siente que aprovecha una oportunidad única sobre productos que compraría de todos modos.`,
+      itemsDesglose: [
+        { nombre: canarias.nombreOriginal, precioRegular: getRegularPrice(canarias) },
+        { nombre: baldo.nombreOriginal, precioRegular: getRegularPrice(baldo) }
+      ]
     });
   }
 
@@ -719,7 +749,11 @@ export function generateSmartCombos(
         gananciaEstimada: gain,
         margenPorc: margin,
         motivoSugerencia: `Artículos actualmente en oferta en yerbazo.com.ar${p1.webStockStatus === 'ultimas' ? ' (¡últimas unidades online!)' : ''}.`,
-        razonamiento: `Apalanca el descuento que los clientes ya ven en la web para concretar compras de mayor volumen manteniendo margen saludable.`
+        razonamiento: `Apalanca el descuento que los clientes ya ven en la web para concretar compras de mayor volumen manteniendo margen saludable.`,
+        itemsDesglose: [
+          { nombre: p1.nombreOriginal, precioRegular: getRegularPrice(p1) },
+          { nombre: p2.nombreOriginal, precioRegular: getRegularPrice(p2) }
+        ]
       });
     }
   }
