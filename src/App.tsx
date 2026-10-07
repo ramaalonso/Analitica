@@ -23,6 +23,7 @@ import { ClientsAndBilling } from './components/ClientsAndBilling';
 import { RepurchaseRadar } from './components/RepurchaseRadar';
 import { TransactionsExplorer } from './components/TransactionsExplorer';
 import { ExecutiveReportModal } from './components/ExecutiveReportModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 export function App() {
@@ -194,81 +195,81 @@ export function App() {
 
       {/* Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        
-        {activeTab === 'dashboard' && (
-          <DashboardOverview
-            dataset={dataset}
-            monthlyMetrics={monthlyMetrics}
-            performances={performances}
-            selectedMonth={selectedMonth}
-            onNavigateTab={setActiveTab}
-          />
-        )}
+        <ErrorBoundary fallbackTitle="Hubo un inconveniente al cargar esta sección">
+          {activeTab === 'dashboard' && (
+            <DashboardOverview
+              dataset={dataset}
+              monthlyMetrics={monthlyMetrics}
+              performances={performances}
+              selectedMonth={selectedMonth}
+              onNavigateTab={setActiveTab}
+            />
+          )}
 
-        {activeTab === 'productos' && (
-          <ProductAnalysis
-            performances={performances}
-            selectedMonth={selectedMonth}
-          />
-        )}
+          {activeTab === 'productos' && (
+            <ProductAnalysis
+              performances={performances}
+              selectedMonth={selectedMonth}
+            />
+          )}
 
-        {activeTab === 'recompra' && (
-          <RepurchaseRadar
-            dataset={dataset}
-            catalog={dataset.stock}
-            webStore={dataset.webStore}
-          />
-        )}
+          {activeTab === 'recompra' && (
+            <RepurchaseRadar
+              dataset={dataset}
+              catalog={dataset.stock}
+              webStore={dataset.webStore}
+            />
+          )}
 
-        {activeTab === 'recomendaciones' && (
-          <RecommendationsAndPromos
-            performances={performances}
-            combos={combos}
-            catalog={dataset.stock}
-            selectedMonth={selectedMonth}
-            onSync={handleSync}
-            onSyncWebStore={handleSyncWebStore}
-            isSyncing={isSyncing}
-            lastSyncTime={dataset.lastSyncTime}
-            webStore={dataset.webStore}
-          />
-        )}
+          {activeTab === 'recomendaciones' && (
+            <RecommendationsAndPromos
+              performances={performances}
+              combos={combos}
+              catalog={dataset.stock}
+              selectedMonth={selectedMonth}
+              onSync={handleSync}
+              onSyncWebStore={handleSyncWebStore}
+              isSyncing={isSyncing}
+              lastSyncTime={dataset.lastSyncTime}
+              webStore={dataset.webStore}
+            />
+          )}
 
-        {activeTab === 'comparativa' && (
-          <HistoricalComparison
-            monthlyMetrics={monthlyMetrics}
-            performances={performances}
-            ventas={dataset.ventas}
-          />
-        )}
+          {activeTab === 'comparativa' && (
+            <HistoricalComparison
+              monthlyMetrics={monthlyMetrics}
+              performances={performances}
+              ventas={dataset.ventas}
+            />
+          )}
 
-        {activeTab === 'simulador' && (
-          <PriceSimulator
-            performances={performances}
-          />
-        )}
+          {activeTab === 'simulador' && (
+            <PriceSimulator
+              performances={performances}
+            />
+          )}
 
-        {activeTab === 'stock' && (
-          <InventoryAndPurchases
-            dataset={dataset}
-            performances={performances}
-          />
-        )}
+          {activeTab === 'stock' && (
+            <InventoryAndPurchases
+              dataset={dataset}
+              performances={performances}
+            />
+          )}
 
-        {activeTab === 'clientes' && (
-          <ClientsAndBilling
-            dataset={dataset}
-          />
-        )}
+          {activeTab === 'clientes' && (
+            <ClientsAndBilling
+              dataset={dataset}
+            />
+          )}
 
-        {activeTab === 'ventas' && (
-          <TransactionsExplorer
-            ventas={dataset.ventas}
-            selectedMonth={selectedMonth}
-            dataset={dataset}
-          />
-        )}
-
+          {activeTab === 'ventas' && (
+            <TransactionsExplorer
+              ventas={dataset.ventas}
+              selectedMonth={selectedMonth}
+              dataset={dataset}
+            />
+          )}
+        </ErrorBoundary>
       </main>
 
       {/* Footer */}

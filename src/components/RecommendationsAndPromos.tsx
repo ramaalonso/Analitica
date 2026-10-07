@@ -813,6 +813,9 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
             const itemsText = combo.itemsDesglose && combo.itemsDesglose.length > 0
               ? combo.itemsDesglose.map(it => `• ${it.nombre} ($${it.precioRegular.toLocaleString('es-AR')})`).join('\n')
               : `• ${combo.productoPrincipal}\n• ${combo.productoSecundario}${combo.productoTerciario ? `\n• ${combo.productoTerciario}` : ''}`;
+            const webLinkText = activeCoupon 
+              ? `\n🏷️ ¡Comprando en yerbazo.com.ar podés sumar el cupón "${activeCoupon.code}" para un ${activeCoupon.discount}% OFF adicional!\n🛒 Web: https://yerbazo.com.ar/` 
+              : '\n🛒 Hacé tu pedido directo en: https://yerbazo.com.ar/';
             const pitch = `🌿 ¡PROMO ESPECIAL EN YERBAZO! 🌿\nLlevate el ${combo.titulo} a un precio imperdible:\n🔥 Precio regular por separado: $${combo.precioRegularTotal.toLocaleString('es-AR')}\n${itemsText}\n✨ Precio Promo: $${customPrice.toLocaleString('es-AR')} (${currentDiscount}% OFF)\n💰 ¡Ahorrás $${savingsAmount.toLocaleString('es-AR')}!${webLinkText}\n¡Escribinos por privado o hacé tu pedido online!`;
 
             return (
