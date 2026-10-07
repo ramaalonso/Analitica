@@ -4,7 +4,7 @@ import { RAW_SNAPSHOT_DATA } from '../data/initialData';
 import * as XLSX from 'xlsx';
 
 const GOOGLE_SHEET_ID = '15hjl5YFZqSFRGuh1IEv7zHDRXrQPPfvRU8dijVOmWPY';
-const CACHE_VERSION = 'v2_clean_currency';
+const CACHE_VERSION = 'v4_real_prices_2026';
 
 const TABS_CONFIG = [
   { id: 'ventas', gid: '1558868693', name: 'Ventas' },
@@ -63,26 +63,26 @@ export const DEFAULT_WEB_STORE_DATA: WebStoreData = {
   lastUpdated: new Date().toISOString(),
   coupons: [],
   products: [
-    { id: 1, title: 'Baldo 1kg', price: 10700, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Baldo%201kg.webp', isSale: false, stockStatus: 'normal' },
-    { id: 2, title: 'Baldo 500g', price: 6000, salePrice: 5800, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Baldo%20500g.webp', isSale: true, isUrgent: true, stockStatus: 'ultimas' },
-    { id: 3, title: 'Canarias tradicional 1kg', price: 10500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20tradicional%201kg.webp', isSale: false, stockStatus: 'normal' },
-    { id: 4, title: 'Canarias tradicional 500g', price: 5700, salePrice: 5600, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Canarias%20tradicional%20500g.webp', isSale: false, stockStatus: 'normal' },
-    { id: 5, title: 'Canarias serena 1kg', price: 11200, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20serena%201kg.webp', isSale: false, isUrgent: true, stockStatus: 'ultimas' },
-    { id: 6, title: 'Canarias serena 500g', price: 6500, salePrice: 6000, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Canarias%20serena%20500g.webp', isSale: false, stockStatus: 'normal' },
-    { id: 7, title: 'Canarias edicion especial 1kg', price: 11500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20edicion%20especial%201kg.webp', isSale: false, isUrgent: true, stockStatus: 'ultimas' },
-    { id: 8, title: 'Canarias edicion especial 500g', price: 6500, salePrice: 6300, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Canarias%20edicion%20especial%20500g.webp', isSale: false, stockStatus: 'normal' },
-    { id: 23, title: 'Canarias Te Verde y Jenjibre 1kg', price: 11500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20te%20verde%20y%20jenjibre%201kg.webp', isSale: false, stockStatus: 'normal' },
-    { id: 9, title: 'ReiVerde premium 1kg', price: 10200, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/ReiVerde%20premium%201kg.webp', isSale: false, stockStatus: 'normal' },
+    { id: 1, title: 'Baldo 1kg', price: 10900, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Baldo%201kg.webp', isSale: false, stockStatus: 'normal' },
+    { id: 2, title: 'Baldo 500g', price: 6200, salePrice: 5800, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Baldo%20500g.webp', isSale: true, isUrgent: true, stockStatus: 'ultimas' },
+    { id: 3, title: 'Canarias tradicional 1kg', price: 10700, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20tradicional%201kg.webp', isSale: false, stockStatus: 'normal' },
+    { id: 4, title: 'Canarias tradicional 500g', price: 6000, salePrice: 5600, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Canarias%20tradicional%20500g.webp', isSale: false, stockStatus: 'normal' },
+    { id: 5, title: 'Canarias serena 1kg', price: 11500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20serena%201kg.webp', isSale: false, isUrgent: true, stockStatus: 'ultimas' },
+    { id: 6, title: 'Canarias serena 500g', price: 6700, salePrice: 6000, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Canarias%20serena%20500g.webp', isSale: false, stockStatus: 'normal' },
+    { id: 7, title: 'Canarias edicion especial 1kg', price: 11700, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20edicion%20especial%201kg.webp', isSale: false, isUrgent: true, stockStatus: 'ultimas' },
+    { id: 8, title: 'Canarias edicion especial 500g', price: 6700, salePrice: 6300, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Canarias%20edicion%20especial%20500g.webp', isSale: false, stockStatus: 'normal' },
+    { id: 23, title: 'Canarias Te Verde y Jenjibre 1kg', price: 11700, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Canarias%20te%20verde%20y%20jenjibre%201kg.webp', isSale: false, stockStatus: 'normal' },
+    { id: 9, title: 'ReiVerde premium 1kg', price: 10500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/ReiVerde%20premium%201kg.webp', isSale: false, stockStatus: 'normal' },
     { id: 10, title: 'ReiVerde premium 500g', price: 5800, salePrice: 5500, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/ReiVerde%20premium%20500g.webp', isSale: false, stockStatus: 'normal' },
-    { id: 22, title: 'ReiVerde Padron Argentino 1KG', price: 7200, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/ReiVerde%20Padron%20Argentino%201kg.webp', isSale: false, stockStatus: 'normal' },
-    { id: 21, title: 'ReiVerde Padron Argentino 500g', price: 4100, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/ReiVerde%20Padron%20Argentino%20500g.webp', isSale: false, stockStatus: 'normal' },
+    { id: 22, title: 'ReiVerde Padron Argentino 1kg', price: 7500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/ReiVerde%20Padron%20Argentino%201kg.webp', isSale: false, stockStatus: 'normal' },
+    { id: 21, title: 'ReiVerde Padron Argentino 500g', price: 4300, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/ReiVerde%20Padron%20Argentino%20500g.webp', isSale: false, stockStatus: 'normal' },
     { id: 11, title: 'Verdecita 1kg', price: 8300, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Verdecita%201kg.webp', isSale: false, stockStatus: 'normal' },
-    { id: 12, title: 'Verdecita 500g', price: 4200, salePrice: 4000, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Verdecita%20500g.webp', isSale: false, stockStatus: 'normal' },
-    { id: 19, title: 'Verdecita con palo 1KG', price: 6000, salePrice: 5500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/verdecita%20con%20palo%201kg.webp', isSale: true, stockStatus: 'normal' },
-    { id: 13, title: 'Pindare 1kg', price: 7500, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Pindare%201kg.webp', isSale: false, stockStatus: 'normal' },
-    { id: 14, title: 'Pindare 500g', price: 5000, salePrice: 4500, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Pindare%20500g.webp', isSale: true, stockStatus: 'normal' },
+    { id: 12, title: 'Verdecita 500g', price: 4400, salePrice: 4000, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Verdecita%20500g.webp', isSale: false, stockStatus: 'normal' },
+    { id: 19, title: 'Verdecita con palo 1KG', price: 6200, salePrice: 5700, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/verdecita%20con%20palo%201kg.webp', isSale: true, stockStatus: 'normal' },
+    { id: 13, title: 'Pindare 1kg', price: 7700, category: '1kg', badge: '1 kg', weight: '1 kg', image: 'https://yerbazo.com.ar/img/Pindare%201kg.webp', isSale: false, stockStatus: 'normal' },
+    { id: 14, title: 'Pindare 500g', price: 5200, salePrice: 4700, category: '500g', badge: '500 g', weight: '500 g', image: 'https://yerbazo.com.ar/img/Pindare%20500g.webp', isSale: true, stockStatus: 'normal' },
     { id: 15, title: 'Lata baldo 500g', price: 23000, salePrice: 18500, category: 'otros', badge: '500 g', image: 'https://yerbazo.com.ar/img/Lata%20baldo.webp', isSale: true, isUrgent: true, stockStatus: 'ultimas' },
-    { id: 16, title: 'Reposa mate', price: 4000, salePrice: 3000, category: 'otros', badge: 'Otros', image: 'https://yerbazo.com.ar/img/Reposa%20mate%20portada.webp', isSale: true, isUrgent: true, stockStatus: 'ultimas' },
+    { id: 16, title: 'Reposa mate', price: 4000, salePrice: 3500, category: 'otros', badge: 'Otros', image: 'https://yerbazo.com.ar/img/Reposa%20mate%20portada.webp', isSale: true, isUrgent: true, stockStatus: 'ultimas' },
     { id: 17, title: 'Yerbera marron 400G', price: 11000, category: 'otros', badge: 'Otros', image: 'https://yerbazo.com.ar/img/yerbera_marron.webp', isSale: false, stockStatus: 'normal' },
     { id: 18, title: 'Yerbera negra 400G', price: 11000, category: 'otros', badge: 'Otros', image: 'https://yerbazo.com.ar/img/yerbera_negra.webp', isSale: false, stockStatus: 'normal' },
     { id: 20, title: 'Pico mate System', price: 6000, category: 'otros', badge: 'Otros', image: 'https://yerbazo.com.ar/img/pico_sistem_2.webp', isSale: false, stockStatus: 'normal' }
