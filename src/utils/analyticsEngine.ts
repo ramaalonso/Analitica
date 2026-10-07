@@ -470,21 +470,38 @@ export function generateSmartCombos(
   // Fallbacks if lists are empty
   const fallbackStars = performances.filter(p => p.stockActual > 0);
   const getStar = (offset: number = 0) => stars[(seed + offset) % Math.max(1, stars.length)] || fallbackStars[0];
-  const getAcc = (offset: number = 0) => accessories[(seed + offset) % Math.max(1, accessories.length)] || accessories[0];
+  
+  // Sort accessories by margin descending to pair high-margin hardware with yerbas
+  const sortedAccessories = [...accessories].sort((a, b) => b.margenPorc - a.margenPorc);
+  const getAcc = (offset: number = 0) => sortedAccessories[(seed + offset) % Math.max(1, sortedAccessories.length)] || sortedAccessories[0];
   const getSlow = (offset: number = 0) => slowMovers[(seed + offset) % Math.max(1, slowMovers.length)] || performances[performances.length - 1];
   const getMargin = (offset: number = 0) => highMarginYerbas[(seed + offset) % Math.max(1, highMarginYerbas.length)] || performances[1];
 
-  // COMBO 1: Estrella del Mes + Accesorio Clave (Ticket Promedio Booster)
+  // Helper to calculate a safe promo discount that ensures margin >= 7%
+  const calculateSafeDiscount = (regTotal: number, costoTotal: number, maxDesiredDiscount: number = 8) => {
+    let discount = maxDesiredDiscount;
+    while (discount >= 3) {
+      const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
+      const gain = comboPrice - costoTotal;
+      const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+      if (margin >= 7.0) {
+        return { discount, comboPrice, gain, margin: parseFloat(margin.toFixed(1)) };
+      }
+      discount -= 1;
+    }
+    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
+    const gain = comboPrice - costoTotal;
+    const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+    return { discount, comboPrice, gain, margin: parseFloat(margin.toFixed(1)) };
+  };
+
+  // COMBO 1: Estrella del Mes + Accesorio Clave de Alto Margen (Ticket Promedio Booster)
   const star1 = getStar(0);
   const acc1 = getAcc(0);
   if (star1 && acc1 && star1.producto !== acc1.producto) {
     const regTotal = getRegularPrice(star1) + getRegularPrice(acc1);
-    const discount = 10;
-    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
     const costoTotal = star1.precioCompra + acc1.precioCompra;
-    const gain = comboPrice - costoTotal;
-    const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
-    const cuponWeb = coupon10 ? `${coupon10} (10% OFF en yerbazo.com.ar)` : undefined;
+    const { discount, comboPrice, gain, margin } = calculateSafeDiscount(regTotal, costoTotal, 8);
 
     combos.push({
       id: `combo-star-acc-${seed}`,
@@ -492,7 +509,7 @@ export function generateSmartCombos(
       tipo: 'Estrella + Accesorio',
       badge: 'Ticket Promedio Booster',
       categoriaEstrategica: 'estrellas',
-      descripcion: `Combina el producto con mayor salida del mes (${star1.nombreOriginal}) con ${acc1.nombreOriginal} con un 10% OFF.`,
+      descripcion: `Combina el producto con mayor salida del mes (${star1.nombreOriginal}) con ${acc1.nombreOriginal} con un ${discount}% OFF garantizando alta ganancia.`,
       productoPrincipal: star1.nombreOriginal,
       productoSecundario: acc1.nombreOriginal,
       imagenPrincipal: star1.imagenUrl,
@@ -503,9 +520,9 @@ export function generateSmartCombos(
       descuentoPorc: discount,
       costoTotal,
       gananciaEstimada: gain,
-      margenPorc: parseFloat(margin.toFixed(1)),
+      margenPorc: margin,
       motivoSugerencia: `${star1.nombreOriginal} acumula ${star1.unidadesVendidas} unidades vendidas este mes.`,
-      razonamiento: `Apalanca el flujo de ventas de tu yerba líder para traccionar la venta de accesorios, elevando el ticket promedio de compra a $${comboPrice.toLocaleString('es-AR')}.`
+      razonamiento: `Apalanca el flujo de ventas de tu yerba líder para traccionar la venta de accesorios, elevando el ticket promedio a $${comboPrice.toLocaleString('es-AR')}.`
     });
   }
 
@@ -514,11 +531,8 @@ export function generateSmartCombos(
   const marginYerba = getMargin(0);
   if (star2 && marginYerba && star2.producto !== marginYerba.producto) {
     const regTotal = getRegularPrice(star2) + getRegularPrice(marginYerba);
-    const discount = 8;
-    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
     const costoTotal = star2.precioCompra + marginYerba.precioCompra;
-    const gain = comboPrice - costoTotal;
-    const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+    const { discount, comboPrice, gain, margin } = calculateSafeDiscount(regTotal, costoTotal, 6);
 
     combos.push({
       id: `combo-duo-${seed}`,
@@ -526,7 +540,7 @@ export function generateSmartCombos(
       tipo: 'Pack Degustación',
       badge: 'Cross-sell de Alto Margen',
       categoriaEstrategica: 'duos',
-      descripcion: `Pack para invitar a tus clientes a descubrir ${marginYerba.nombreOriginal} (margen de ${marginYerba.margenPorc.toFixed(0)}%) junto a su favorita de siempre.`,
+      descripcion: `Pack para invitar a tus clientes a descubrir ${marginYerba.nombreOriginal} (margen de ${marginYerba.margenPorc.toFixed(0)}%) junto a su favorita de siempre con ${discount}% OFF.`,
       productoPrincipal: star2.nombreOriginal,
       productoSecundario: marginYerba.nombreOriginal,
       imagenPrincipal: star2.imagenUrl,
@@ -537,57 +551,51 @@ export function generateSmartCombos(
       descuentoPorc: discount,
       costoTotal,
       gananciaEstimada: gain,
-      margenPorc: parseFloat(margin.toFixed(1)),
+      margenPorc: margin,
       motivoSugerencia: `${marginYerba.nombreOriginal} ofrece un excelente margen (${marginYerba.margenPorc.toFixed(0)}%) que compensa ampliamente el descuento.`,
       razonamiento: `Convierte compradores de una sola marca en clientes multivariedad, logrando una ganancia líquida de $${gain.toLocaleString('es-AR')} por combo.`
     });
   }
 
-  // COMBO 3: Liquidación / Reactivación de Stock Inmovilizado
-  const star3 = getStar(2);
+  // COMBO 3: Liquidación / Reactivación de Stock Inmovilizado Subvencionado
   const slowItem = getSlow(0);
-  if (star3 && slowItem && star3.producto !== slowItem.producto) {
-    const regTotal = getRegularPrice(star3) + getRegularPrice(slowItem);
-    const discount = 15;
-    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
-    const costoTotal = star3.precioCompra + slowItem.precioCompra;
-    const gain = comboPrice - costoTotal;
-    const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+  const highMarginSubsidizer = sortedAccessories[0] || getMargin(1);
+  if (slowItem && highMarginSubsidizer && slowItem.producto !== highMarginSubsidizer.producto) {
+    const regTotal = getRegularPrice(slowItem) + getRegularPrice(highMarginSubsidizer);
+    const costoTotal = slowItem.precioCompra + highMarginSubsidizer.precioCompra;
+    const { discount, comboPrice, gain, margin } = calculateSafeDiscount(regTotal, costoTotal, 10);
 
     combos.push({
       id: `combo-clearance-${seed}`,
-      titulo: `Pack Desbloqueo: ${star3.nombreOriginal} + ${slowItem.nombreOriginal}`,
+      titulo: `Pack Desbloqueo: ${slowItem.nombreOriginal} + ${highMarginSubsidizer.nombreOriginal}`,
       tipo: 'Reactivación de Lento Movimiento',
       badge: 'Liberación de Capital Inmovilizado',
       categoriaEstrategica: 'liquidacion',
-      descripcion: `Liquidación inteligente con 15% OFF: permite recuperar el costo invertido en ${slowItem.nombreOriginal} apalancándolo con ${star3.nombreOriginal}.`,
-      productoPrincipal: star3.nombreOriginal,
-      productoSecundario: slowItem.nombreOriginal,
-      imagenPrincipal: star3.imagenUrl,
-      imagenSecundaria: slowItem.imagenUrl,
-      cuponWebSugerido: coupon20 ? `${coupon20} (20% OFF en yerbazo.com.ar)` : (coupon10 ? `${coupon10} (10% OFF)` : undefined),
+      descripcion: `Liquidación inteligente con ${discount}% OFF: recupera el capital inmovilizado en ${slowItem.nombreOriginal} apalancándolo con el alto margen de ${highMarginSubsidizer.nombreOriginal}.`,
+      productoPrincipal: slowItem.nombreOriginal,
+      productoSecundario: highMarginSubsidizer.nombreOriginal,
+      imagenPrincipal: slowItem.imagenUrl,
+      imagenSecundaria: highMarginSubsidizer.imagenUrl,
+      cuponWebSugerido: coupon10 ? `${coupon10} (10% OFF en yerbazo.com.ar)` : undefined,
       precioRegularTotal: regTotal,
       precioComboSugerido: comboPrice,
       descuentoPorc: discount,
       costoTotal,
       gananciaEstimada: gain,
-      margenPorc: parseFloat(margin.toFixed(1)),
-      motivoSugerencia: `Hay ${slowItem.stockActual} unidades en depósito de ${slowItem.nombreOriginal} con baja rotación en este mes.`,
+      margenPorc: margin,
+      motivoSugerencia: `Hay ${slowItem.stockActual} unidades en depósito de ${slowItem.nombreOriginal} con baja rotación.`,
       razonamiento: `Es más rentable recuperar liquidez inmediata y reinvertirla en yerbas de alta rotación que mantener stock estacionado acumulando costo de oportunidad.`
     });
   }
 
-  // COMBO 4: Kit Matero Completo (Ticket Alto)
+  // COMBO 4: Kit Experiencia Matera Integral (Ticket Alto y Margen Sólido)
   const star4 = getStar(0);
-  const acc2 = getAcc(1) || getAcc(0);
-  const acc3 = getAcc(2) || accessories.find(a => a.producto.includes('pico') || a.producto.includes('yerbera'));
+  const acc2 = sortedAccessories.find(a => a.producto.includes('yerbera') || a.producto.includes('lata')) || sortedAccessories[0];
+  const acc3 = sortedAccessories.find(a => a.producto.includes('reposa') || a.producto.includes('pico') || a.producto.includes('guarda'));
   if (star4 && acc2) {
     const regTotal = getRegularPrice(star4) + getRegularPrice(acc2) + (acc3 ? getRegularPrice(acc3) : 0);
-    const discount = 12;
-    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
     const costoTotal = star4.precioCompra + acc2.precioCompra + (acc3 ? acc3.precioCompra : 0);
-    const gain = comboPrice - costoTotal;
-    const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+    const { discount, comboPrice, gain, margin } = calculateSafeDiscount(regTotal, costoTotal, 8);
 
     combos.push({
       id: `combo-kit-completo-${seed}`,
@@ -595,7 +603,7 @@ export function generateSmartCombos(
       tipo: 'Kit Matero Completo',
       badge: 'Pack Ticket Alto',
       categoriaEstrategica: 'kits',
-      descripcion: `Experiencia de mate integral: incluye yerba de primera línea y accesorios de apoyo con un descuento atractivo del 12%.`,
+      descripcion: `Experiencia de mate integral: incluye yerba de primera línea y accesorios de apoyo con un descuento atractivo del ${discount}%.`,
       productoPrincipal: star4.nombreOriginal,
       productoSecundario: acc2.nombreOriginal,
       productoTerciario: acc3 ? acc3.nombreOriginal : undefined,
@@ -608,53 +616,52 @@ export function generateSmartCombos(
       descuentoPorc: discount,
       costoTotal,
       gananciaEstimada: gain,
-      margenPorc: parseFloat(margin.toFixed(1)),
+      margenPorc: margin,
       motivoSugerencia: `Maximiza el ticket de venta a más de $${comboPrice.toLocaleString('es-AR')}, ideal para regalos o nuevos clientes.`,
       razonamiento: `Genera una ganancia neta récord de $${gain.toLocaleString('es-AR')} en un único despacho, ahorrando costos logísticos de empaque.`
     });
   }
 
-  // COMBO 5: Doble Pack Fidelización (2x Yerba Estrella)
-  const star5 = getStar(seed % Math.max(1, stars.length));
-  if (star5 && star5.stockActual >= 4) {
-    const regTotal = getRegularPrice(star5) * 2;
-    const discount = 7; // ~14% off on the second unit
-    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
-    const costoTotal = star5.precioCompra * 2;
-    const gain = comboPrice - costoTotal;
-    const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+  // COMBO 5: Doble Pack Fidelización (2x Yerba de Margen Sostenible)
+  // Priorizar yerbas con margen suficiente para soportar descuentos 2x (>= 18%)
+  const fidelizacionYerba = highMarginYerbas.find(y => y.stockActual >= 4) || star1;
+  if (fidelizacionYerba && fidelizacionYerba.stockActual >= 2) {
+    const regTotal = getRegularPrice(fidelizacionYerba) * 2;
+    const costoTotal = fidelizacionYerba.precioCompra * 2;
+    const { discount, comboPrice, gain, margin } = calculateSafeDiscount(regTotal, costoTotal, 6);
 
     combos.push({
       id: `combo-fidelizacion-${seed}`,
-      titulo: `Doble Pack Stock: 2x ${star5.nombreOriginal}`,
+      titulo: `Doble Pack Stock: 2x ${fidelizacionYerba.nombreOriginal}`,
       tipo: 'Fidelización Doble (2x)',
       badge: 'Defensa de Volumen',
       categoriaEstrategica: 'fidelizacion',
-      descripcion: `Asegura el consumo mensual de tus clientes recurrentes con un 7% OFF llevando dos paquetes iguales.`,
-      productoPrincipal: `${star5.nombreOriginal} (Unidad 1)`,
-      productoSecundario: `${star5.nombreOriginal} (Unidad 2)`,
-      imagenPrincipal: star5.imagenUrl,
-      imagenSecundaria: star5.imagenUrl,
+      descripcion: `Asegura el consumo mensual de tus clientes recurrentes con un ${discount}% OFF llevando dos paquetes iguales.`,
+      productoPrincipal: `${fidelizacionYerba.nombreOriginal} (Unidad 1)`,
+      productoSecundario: `${fidelizacionYerba.nombreOriginal} (Unidad 2)`,
+      imagenPrincipal: fidelizacionYerba.imagenUrl,
+      imagenSecundaria: fidelizacionYerba.imagenUrl,
       cuponWebSugerido: coupon10 ? `${coupon10} (10% OFF en yerbazo.com.ar)` : undefined,
       precioRegularTotal: regTotal,
       precioComboSugerido: comboPrice,
       descuentoPorc: discount,
       costoTotal,
       gananciaEstimada: gain,
-      margenPorc: parseFloat(margin.toFixed(1)),
-      motivoSugerencia: `${star5.nombreOriginal} tiene stock suficiente (${star5.stockActual} u.) para abastecer compras duplicadas.`,
+      margenPorc: margin,
+      motivoSugerencia: `${fidelizacionYerba.nombreOriginal} tiene stock suficiente (${fidelizacionYerba.stockActual} u.) para abastecer compras duplicadas.`,
       razonamiento: `Fideliza al consumidor por 30-45 días, cerrándole la puerta a competidores y asegurando una ganancia neta de $${gain.toLocaleString('es-AR')}.`
     });
   }
 
-  // COMBO 6: Dúo de Marcas de Élite (Canarias + Baldo)
+  // COMBO 6: Dúo Bestsellers (Canarias + Baldo) - Calibrado para Venta Directa
   const canarias = performances.find(p => p.producto.includes('canarias') && p.producto.includes('1kg') && p.stockActual > 0);
   const baldo = performances.find(p => p.producto.includes('baldo') && p.producto.includes('1kg') && p.stockActual > 0);
   if (canarias && baldo && canarias.producto !== baldo.producto) {
     const regTotal = getRegularPrice(canarias) + getRegularPrice(baldo);
-    const discount = 8;
-    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
     const costoTotal = canarias.precioCompra + baldo.precioCompra;
+    // Calibrar descuento moderado para que en venta directa WA mantenga >10% de ganancia
+    const discount = 4;
+    const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
     const gain = comboPrice - costoTotal;
     const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
 
@@ -662,14 +669,14 @@ export function generateSmartCombos(
       id: `combo-elite-uruguayo-${seed}`,
       titulo: `Dúo Clásico Rioplatense: ${canarias.nombreOriginal} + ${baldo.nombreOriginal}`,
       tipo: 'Dúo Bestsellers',
-      badge: 'Los Dos Más Vendidos',
+      badge: 'Exclusivo Venta Directa',
       categoriaEstrategica: 'duos',
-      descripcion: `El pack definitivo para los amantes del mate estilo uruguayo despalada: combina las dos marcas más vendidas de Yerbazo con 8% OFF.`,
+      descripcion: `El pack definitivo para los amantes del mate estilo uruguayo despalada: combina las dos marcas más vendidas de Yerbazo con un ${discount}% OFF en venta directa.`,
       productoPrincipal: canarias.nombreOriginal,
       productoSecundario: baldo.nombreOriginal,
       imagenPrincipal: canarias.imagenUrl,
       imagenSecundaria: baldo.imagenUrl,
-      cuponWebSugerido: coupon10 ? `${coupon10} (10% OFF en yerbazo.com.ar)` : undefined,
+      cuponWebSugerido: undefined,
       precioRegularTotal: regTotal,
       precioComboSugerido: comboPrice,
       descuentoPorc: discount,
@@ -681,7 +688,7 @@ export function generateSmartCombos(
     });
   }
 
-  // COMBO 7: Ofertas Web Oficiales yerbazo.com.ar + Cupón Activo
+  // COMBO 7: Ofertas Web Oficiales yerbazo.com.ar
   const webOfferProducts = performances.filter(p => p.webEnOferta && p.precioWebOferta && p.stockActual > 0);
   if (webOfferProducts.length >= 2) {
     const p1 = webOfferProducts[seed % webOfferProducts.length];
@@ -690,11 +697,8 @@ export function generateSmartCombos(
       const reg1 = getRegularPrice(p1);
       const reg2 = getRegularPrice(p2);
       const regTotal = reg1 + reg2;
-      const discount = 15;
-      const comboPrice = Math.round((regTotal * (1 - discount / 100)) / 100) * 100;
       const costoTotal = p1.precioCompra + p2.precioCompra;
-      const gain = comboPrice - costoTotal;
-      const margin = comboPrice > 0 ? (gain / comboPrice) * 100 : 0;
+      const { discount, comboPrice, gain, margin } = calculateSafeDiscount(regTotal, costoTotal, 8);
 
       combos.push({
         id: `combo-web-offers-${seed}`,
@@ -702,7 +706,7 @@ export function generateSmartCombos(
         tipo: 'Ofertas Web Oficiales',
         badge: 'Sincronizado con yerbazo.com.ar',
         categoriaEstrategica: 'ofertas_web',
-        descripcion: `Combina dos referencias con rebaja activa en la tienda online (${p1.nombreOriginal} a $${p1.precioWebOferta?.toLocaleString('es-AR')} y ${p2.nombreOriginal} a $${p2.precioWebOferta?.toLocaleString('es-AR')}) con un 15% OFF de pack promocional.`,
+        descripcion: `Combina dos referencias con rebaja activa en la tienda online (${p1.nombreOriginal} a $${p1.precioWebOferta?.toLocaleString('es-AR')} y ${p2.nombreOriginal} a $${p2.precioWebOferta?.toLocaleString('es-AR')}) con un ${discount}% OFF de pack promocional.`,
         productoPrincipal: p1.nombreOriginal,
         productoSecundario: p2.nombreOriginal,
         imagenPrincipal: p1.imagenUrl,
@@ -713,9 +717,9 @@ export function generateSmartCombos(
         descuentoPorc: discount,
         costoTotal,
         gananciaEstimada: gain,
-        margenPorc: parseFloat(margin.toFixed(1)),
+        margenPorc: margin,
         motivoSugerencia: `Artículos actualmente en oferta en yerbazo.com.ar${p1.webStockStatus === 'ultimas' ? ' (¡últimas unidades online!)' : ''}.`,
-        razonamiento: `Apalanca el descuento que los clientes ya ven en la web para concretar compras de mayor volumen.`
+        razonamiento: `Apalanca el descuento que los clientes ya ven en la web para concretar compras de mayor volumen manteniendo margen saludable.`
       });
     }
   }

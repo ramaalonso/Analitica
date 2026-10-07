@@ -22,7 +22,9 @@ import {
   AlertCircle,
   Globe,
   ExternalLink,
-  Tag
+  Tag,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { ProductPerformance, ComboOpportunity, CatalogProduct, WebStoreData } from '../types';
 import { generateSmartCombos } from '../utils/analyticsEngine';
@@ -260,11 +262,43 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
     setCustomDiscounts(prev => ({ ...prev, [comboId]: discount }));
   };
 
-  // Filter combos based on selected strategy
-  const filteredCombos = useMemo(() => {
-    if (selectedFilter === 'todos') return currentCombos;
-    return currentCombos.filter(c => c.categoriaEstrategica === selectedFilter);
-  }, [currentCombos, selectedFilter]);
+  // User hard requirement: "si la promocion no genera por lo menos 7% de ganancia, entonces ni siquiera me la muestre"
+  const MIN_PROFIT_MARGIN_THRESHOLD = 7.0;
+
+  // Filter combos based on selected strategy AND strict minimum 7% profit margin
+  const { filteredCombos, hiddenDueToMarginCount } = useMemo(() => {
+    let list = currentCombos;
+    if (selectedFilter !== 'todos') {
+      list = list.filter(c => c.categoriaEstrategica === selectedFilter);
+    }
+
+    let hiddenCount = 0;
+    const passing = list.filter(combo => {
+      const currentDiscount = customDiscounts[combo.id] ?? combo.descuentoPorc;
+      const customPrice = Math.round((combo.precioRegularTotal * (1 - currentDiscount / 100)) / 100) * 100;
+      const currentGain = customPrice - combo.costoTotal;
+      const currentMargin = customPrice > 0 ? parseFloat(((currentGain / customPrice) * 100).toFixed(1)) : 0;
+
+      const couponRate = simulatedCouponDiscount;
+      const priceWithCoupon = couponRate > 0 
+        ? Math.round((customPrice * (1 - couponRate / 100)) / 100) * 100 
+        : customPrice;
+      const gainWithCoupon = priceWithCoupon - combo.costoTotal;
+      const marginWithCoupon = priceWithCoupon > 0 ? parseFloat(((gainWithCoupon / priceWithCoupon) * 100).toFixed(1)) : 0;
+
+      // When a web coupon is simulated/active (>0%), check marginWithCoupon
+      // When in direct sales mode (0%), check currentMargin
+      const effectiveMargin = couponRate > 0 ? marginWithCoupon : currentMargin;
+
+      const isViable = effectiveMargin >= MIN_PROFIT_MARGIN_THRESHOLD;
+      if (!isViable) {
+        hiddenCount++;
+      }
+      return isViable;
+    });
+
+    return { filteredCombos: passing, hiddenDueToMarginCount: hiddenCount };
+  }, [currentCombos, selectedFilter, customDiscounts, simulatedCouponDiscount]);
 
   // Format time of last update
   const formattedLastUpdated = lastUpdatedTime.toLocaleTimeString('es-AR', {
@@ -686,6 +720,37 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
 
         </div>
 
+        {/* Rentabilidad Mínima 7% Guardrail Banner */}
+        <div className="mt-4 p-3.5 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center space-x-2.5 text-xs text-emerald-950 font-bold">
+            <div className="w-7 h-7 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-100" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span>Filtro de Rentabilidad Mínima: ≥ 7% de Ganancia</span>
+                <span className="bg-[#0f4b25] text-[#ece7d7] text-[10px] uppercase font-black px-2 py-0.2 rounded-md">
+                  Activo
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-800 font-medium mt-0.5">
+                Cualquier combo que genere menos del 7% de margen neto {simulatedCouponDiscount > 0 ? `(considerando el cupón web del ${simulatedCouponDiscount}%)` : '(en venta directa)'} se oculta automáticamente para proteger tu caja.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 self-start sm:self-auto shrink-0">
+            {hiddenDueToMarginCount > 0 ? (
+              <span className="text-[11px] text-amber-900 bg-amber-100/90 border border-amber-300/80 font-bold px-2.5 py-1 rounded-xl">
+                🛡️ {hiddenDueToMarginCount} {hiddenDueToMarginCount === 1 ? 'combo ocultado por margen < 7%' : 'combos ocultados por margen < 7%'}
+              </span>
+            ) : (
+              <span className="text-[11px] text-emerald-800 bg-emerald-100/80 font-bold px-2.5 py-1 rounded-xl">
+                ✨ Todos los combos visibles superan el 7% de margen
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Filter Pills */}
         <div className="flex flex-wrap items-center gap-1.5 mt-5">
           <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mr-1 flex items-center">
@@ -693,7 +758,7 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
             Estrategia:
           </span>
           {[
-            { id: 'todos', label: `Todos (${currentCombos.length})` },
+            { id: 'todos', label: `Todos (${filteredCombos.length})` },
             { id: 'ofertas_web', label: '🔥 Ofertas Web Oficiales' },
             { id: 'estrellas', label: '⭐ Estrellas + Accesorios' },
             { id: 'duos', label: '🍃 Dúos de Yerbas' },
@@ -717,6 +782,19 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
 
         {/* Combos Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {filteredCombos.length === 0 && (
+            <div className="col-span-full bg-[#fcfbf7] rounded-3xl p-8 text-center border-2 border-dashed border-stone-200 my-4">
+              <ShieldAlert className="w-10 h-10 text-[#e68628] mx-auto mb-3" />
+              <h4 className="text-base font-black text-stone-900 font-display">
+                Sin promociones disponibles en esta sección con margen ≥ 7%
+              </h4>
+              <p className="text-xs text-stone-500 max-w-md mx-auto mt-1 leading-relaxed">
+                {simulatedCouponDiscount > 0 
+                  ? `Las opciones de esta categoría con el cupón web del ${simulatedCouponDiscount}% dejaban menos del 7% de ganancia. Podés seleccionar '0% (Sin Cupón)' arriba para verlas en venta directa/WhatsApp donde sí superan el 7%.` 
+                  : 'Ningún combo en este filtro cumple con el 7% de ganancia mínima requerida.'}
+              </p>
+            </div>
+          )}
           {filteredCombos.map((combo) => {
             const currentDiscount = customDiscounts[combo.id] ?? combo.descuentoPorc;
             const customPrice = Math.round((combo.precioRegularTotal * (1 - currentDiscount / 100)) / 100) * 100;
@@ -948,19 +1026,32 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
                         Ajustar Descuento Base de la Promo:
                       </span>
                       <div className="flex items-center space-x-1">
-                        {[5, 8, 10, 12, 15, 20].map(disc => (
-                          <button
-                            key={disc}
-                            onClick={() => handleSetDiscount(combo.id, disc)}
-                            className={`flex-1 py-1 rounded-md text-[10px] font-black transition-all cursor-pointer ${
-                              currentDiscount === disc
-                                ? 'bg-[#0f4b25] text-white'
-                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                            }`}
-                          >
-                            {disc}%
-                          </button>
-                        ))}
+                        {[5, 8, 10, 12, 15, 20].map(disc => {
+                          const testPrice = Math.round((combo.precioRegularTotal * (1 - disc / 100)) / 100) * 100;
+                          const testPriceWithCoupon = couponRate > 0 ? Math.round((testPrice * (1 - couponRate / 100)) / 100) * 100 : testPrice;
+                          const testGain = (couponRate > 0 ? testPriceWithCoupon : testPrice) - combo.costoTotal;
+                          const testEffectiveMargin = (couponRate > 0 ? testPriceWithCoupon : testPrice) > 0 
+                            ? parseFloat(((testGain / (couponRate > 0 ? testPriceWithCoupon : testPrice)) * 100).toFixed(1))
+                            : 0;
+                          const isDiscSafe = testEffectiveMargin >= 7.0;
+
+                          return (
+                            <button
+                              key={disc}
+                              onClick={() => handleSetDiscount(combo.id, disc)}
+                              title={isDiscSafe ? `Descuento ${disc}%: deja margen seguro de ${testEffectiveMargin}%` : `Descuento ${disc}% riesgoso: dejaría margen de ${testEffectiveMargin}% (< 7%) y ocultaría el combo`}
+                              className={`flex-1 py-1 rounded-md text-[10px] font-black transition-all cursor-pointer ${
+                                currentDiscount === disc
+                                  ? 'bg-[#0f4b25] text-white shadow-2xs'
+                                  : !isDiscSafe
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                              }`}
+                            >
+                              {disc}%
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
