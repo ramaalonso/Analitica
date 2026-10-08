@@ -254,7 +254,7 @@ ${itemsList || '  • Pedido de yerba'}
 💰 *Total:* $${sale.precioFinal.toLocaleString('es-AR')}
 💳 *Medio de pago:* ${sale.medioPago}
 📦 *Estado entrega:* ${sale.entregado === 'SI' ? 'Entregado ✅' : 'Pendiente de entrega ⏳'}
-${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIENTE' : '✅ *Pago:* ABONADO'}
+${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIENTE\n💳 *Alias Mercado Pago:* `yerbazo.ba`' : '✅ *Pago:* ABONADO'}
 ──────────────────────
 ¡Muchas gracias por elegir Yerbazo! Que disfrutes los mejores mates 🧉✨`;
   };

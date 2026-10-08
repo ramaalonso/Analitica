@@ -58,7 +58,9 @@ export const ClientsAndBilling: React.FC<ClientsAndBillingProps> = ({ dataset })
   const [debtModalClient, setDebtModalClient] = useState<ClienteRow | null>(null);
   const [loyaltyModalClient, setLoyaltyModalClient] = useState<ClienteRow | null>(null);
   const [mpAlias, setMpAlias] = useState<string>(() => {
-    return localStorage.getItem('yerbazo_mp_alias') || 'yerbazo.mp';
+    const saved = localStorage.getItem('yerbazo_mp_alias');
+    if (!saved || saved === 'yerbazo.mp') return 'yerbazo.ba';
+    return saved;
   });
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const [copiedPitch, setCopiedPitch] = useState(false);
