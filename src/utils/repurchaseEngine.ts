@@ -6,7 +6,8 @@ import {
   SaleTransaction,
   ClienteRow
 } from '../types';
-import { normalizeClientName } from './dataParser';
+import { normalizeClientName, normalizeProductName } from './dataParser';
+import { findWebProductMatch } from './analyticsEngine';
 
 /**
  * Extracts weight in kilograms from a product name.
@@ -95,28 +96,44 @@ export function findYerbaPrice(
   catalog: CatalogProduct[], 
   webStore?: WebStoreData
 ): number {
-  const norm = yerbaName.toLowerCase().trim();
+  const norm = normalizeProductName(yerbaName);
 
-  // Try webStore first
-  if (webStore?.products && webStore.products.length > 0) {
-    const foundWeb = webStore.products.find(p => 
-      p.title && norm.includes(p.title.toLowerCase())
-    );
-    if (foundWeb && foundWeb.price > 0) return foundWeb.price;
-  }
-
-  // Try catalog
+  // 1. Try exact or fuzzy match in official Stock catalog
   if (catalog && catalog.length > 0) {
-    const foundCat = catalog.find(p => 
-      p.nombre && norm.includes(p.nombre.toLowerCase())
-    );
-    if (foundCat && foundCat.precioVenta > 0) return foundCat.precioVenta;
+    const exactCat = catalog.find(p => p.nombreNormalizado === norm);
+    if (exactCat && exactCat.precioVenta > 0) return exactCat.precioVenta;
+
+    const fuzzyCat = catalog.find(p => {
+      const pNorm = p.nombreNormalizado;
+      if (norm.includes('baldo') && norm.includes('1kg') && pNorm.includes('baldo') && pNorm.includes('1kg')) return true;
+      if (norm.includes('baldo') && (norm.includes('500g') || norm.includes('500')) && pNorm.includes('baldo') && pNorm.includes('500g')) return true;
+      if (norm.includes('canarias') && norm.includes('serena') && norm.includes('1kg') && pNorm.includes('canarias') && pNorm.includes('serena') && pNorm.includes('1kg')) return true;
+      if (norm.includes('canarias') && (norm.includes('edicion') || norm.includes('especial')) && norm.includes('1kg') && pNorm.includes('canarias') && pNorm.includes('especial') && pNorm.includes('1kg')) return true;
+      if (norm.includes('canarias') && norm.includes('1kg') && pNorm.includes('canarias') && pNorm.includes('tradicional') && pNorm.includes('1kg')) return true;
+      if (norm.includes('verdecita') && norm.includes('1kg') && pNorm.includes('verdecita') && pNorm.includes('1kg')) return true;
+      if (norm.includes('pindare') && norm.includes('1kg') && pNorm.includes('pindare') && pNorm.includes('1kg')) return true;
+      if (norm.includes('rei verde') && norm.includes('1kg') && pNorm.includes('rei verde') && pNorm.includes('1kg')) return true;
+      return false;
+    });
+    if (fuzzyCat && fuzzyCat.precioVenta > 0) return fuzzyCat.precioVenta;
   }
 
-  // Smart fallback by weight
-  if (norm.includes('500g') || norm.includes('500 g')) return 5800;
-  if (norm.includes('canarias serena') || norm.includes('edicion')) return 11200;
-  return 10500;
+  // 2. Try webStore matching
+  if (webStore?.products && webStore.products.length > 0) {
+    const webMatch = findWebProductMatch(yerbaName, webStore.products);
+    if (webMatch && webMatch.price > 0) return webMatch.price;
+  }
+
+  // 3. Fallbacks using latest updated live prices
+  if (norm.includes('500g') || norm.includes('500')) {
+    if (norm.includes('serena') || norm.includes('edicion')) return 6700;
+    if (norm.includes('baldo')) return 6200;
+    return 6000;
+  }
+  if (norm.includes('canarias serena')) return 11500;
+  if (norm.includes('edicion') || norm.includes('especial') || norm.includes('jengibre')) return 11700;
+  if (norm.includes('baldo')) return 10900;
+  return 10700;
 }
 
 /**

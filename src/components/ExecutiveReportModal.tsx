@@ -21,8 +21,22 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const totalFacturado = monthlyMetrics.reduce((acc, m) => acc + m.facturado, 0);
-  const totalGanancia = monthlyMetrics.reduce((acc, m) => acc + m.ganancia, 0);
+  const currentMonthMetric = selectedMonth !== 'TODOS' 
+    ? monthlyMetrics.find(m => m.mesKey === selectedMonth) 
+    : null;
+
+  const totalFacturado = currentMonthMetric 
+    ? currentMonthMetric.facturado 
+    : monthlyMetrics.reduce((acc, m) => acc + m.facturado, 0);
+
+  const totalGanancia = currentMonthMetric 
+    ? currentMonthMetric.ganancia 
+    : monthlyMetrics.reduce((acc, m) => acc + m.ganancia, 0);
+
+  const totalPedidos = currentMonthMetric 
+    ? currentMonthMetric.cantVentas 
+    : dataset.ventas.length;
+
   const margenGeneral = totalFacturado > 0 ? (totalGanancia / totalFacturado) * 100 : 0;
   const topProduct = performances[0];
   const criticalStock = dataset.stock.filter(p => p.restantes <= 4 && p.vendidas > 0);
@@ -106,7 +120,7 @@ export const ExecutiveReportModal: React.FC<ExecutiveReportModalProps> = ({
               </div>
               <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
                 <span className="text-[10px] uppercase font-bold text-stone-400 block mb-1">Total Pedidos</span>
-                <span className="text-xl font-black text-stone-900">{dataset.ventas.length}</span>
+                <span className="text-xl font-black text-stone-900">{totalPedidos}</span>
               </div>
             </div>
           </div>

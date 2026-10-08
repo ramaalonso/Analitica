@@ -971,16 +971,16 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
               </button>
 
               <a
-                href={`https://web.whatsapp.com/`}
+                href={`https://wa.me/?text=${encodeURIComponent(generateOfferPitch(selectedClientForOffer, discountPercent))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => {
                   handleCopyPitch(selectedClientForOffer, discountPercent);
                 }}
-                className="w-full sm:w-auto py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                className="w-full sm:w-auto py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer shadow-md"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Abrir WhatsApp Web</span>
+                <span>Enviar por WhatsApp</span>
               </a>
             </div>
 

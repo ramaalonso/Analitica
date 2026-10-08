@@ -33,9 +33,12 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
   // Available closed months in chronological order
   const availableMonths = monthlyMetrics.map(m => m.mesKey);
   
-  // Default: Septiembre vs Agosto
-  const [periodA, setPeriodA] = useState<string>('Septiembre');
-  const [periodB, setPeriodB] = useState<string>('Agosto');
+  // Default to the two most recent available months
+  const defaultPeriodA = availableMonths.length > 0 ? availableMonths[availableMonths.length - 1] : 'Septiembre';
+  const defaultPeriodB = availableMonths.length > 1 ? availableMonths[availableMonths.length - 2] : (availableMonths[0] || 'Agosto');
+
+  const [periodA, setPeriodA] = useState<string>(() => defaultPeriodA);
+  const [periodB, setPeriodB] = useState<string>(() => defaultPeriodB);
   const [timeView, setTimeView] = useState<'quincenas' | 'acumulado' | 'diario' | 'semanas'>('quincenas');
   const [metricView, setMetricView] = useState<'ambos' | 'facturacion' | 'ganancia'>('ambos');
 

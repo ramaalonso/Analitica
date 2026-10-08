@@ -312,10 +312,12 @@ export const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase text-stone-400 tracking-wider">Más Vendido en Unidades</span>
-            <h4 className="text-sm font-black text-stone-900 truncate max-w-[200px]" title={sortedByVolume?.nombreOriginal}>
-              {sortedByVolume?.nombreOriginal}
+            <h4 className="text-sm font-black text-stone-900 truncate max-w-[200px]" title={sortedByVolume?.nombreOriginal || 'Sin datos'}>
+              {sortedByVolume?.nombreOriginal || 'Sin datos'}
             </h4>
-            <span className="text-xs font-bold text-[#0f4b25]">{sortedByVolume?.unidadesVendidas} paquetes despachados</span>
+            <span className="text-xs font-bold text-[#0f4b25]">
+              {sortedByVolume ? `${sortedByVolume.unidadesVendidas} paquetes despachados` : '0 paquetes despachados'}
+            </span>
           </div>
         </div>
 
@@ -325,10 +327,12 @@ export const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase text-stone-400 tracking-wider">Mayor Recaudación en Dinero</span>
-            <h4 className="text-sm font-black text-stone-900 truncate max-w-[200px]" title={sortedByRevenue?.nombreOriginal}>
-              {sortedByRevenue?.nombreOriginal}
+            <h4 className="text-sm font-black text-stone-900 truncate max-w-[200px]" title={sortedByRevenue?.nombreOriginal || 'Sin datos'}>
+              {sortedByRevenue?.nombreOriginal || 'Sin datos'}
             </h4>
-            <span className="text-xs font-bold text-[#e68628]">${sortedByRevenue?.facturacionTotal.toLocaleString('es-AR')} facturados</span>
+            <span className="text-xs font-bold text-[#e68628]">
+              {sortedByRevenue ? `$${sortedByRevenue.facturacionTotal.toLocaleString('es-AR')} facturados` : '$0 facturados'}
+            </span>
           </div>
         </div>
 
@@ -338,10 +342,12 @@ export const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase text-stone-400 tracking-wider">Mayor Margen de Ganancia</span>
-            <h4 className="text-sm font-black text-stone-900 truncate max-w-[200px]" title={sortedByMargin?.nombreOriginal}>
-              {sortedByMargin?.nombreOriginal}
+            <h4 className="text-sm font-black text-stone-900 truncate max-w-[200px]" title={sortedByMargin?.nombreOriginal || 'Sin datos'}>
+              {sortedByMargin?.nombreOriginal || 'Sin datos'}
             </h4>
-            <span className="text-xs font-bold text-emerald-600">{sortedByMargin?.margenPorc.toFixed(1)}% margen neto</span>
+            <span className="text-xs font-bold text-emerald-600">
+              {sortedByMargin?.margenPorc != null ? `${sortedByMargin.margenPorc.toFixed(1)}% margen neto` : '0.0% margen neto'}
+            </span>
           </div>
         </div>
 

@@ -58,13 +58,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     currentVentas = dataset.ventas.length;
     currentUnidades = performances.reduce((acc, p) => acc + p.unidadesVendidas, 0);
     
-    // Compare last closed month (Septiembre) vs Agosto for headline MoM
-    const sepMetric = monthlyMetrics.find(m => m.mesKey === 'Septiembre');
-    if (sepMetric) {
-      momFacturadoPorc = sepMetric.crecimientoFacturacionMoM;
-      momFacturadoDiff = sepMetric.diferenciaFacturacionMoM;
-      momGananciaPorc = sepMetric.crecimientoGananciaMoM;
-      momGananciaDiff = sepMetric.diferenciaGananciaMoM;
+    // Compare last closed month vs previous for headline MoM
+    const latestClosedMetric = [...monthlyMetrics].reverse().find(m => m.facturado > 0 && m.crecimientoFacturacionMoM != null) || monthlyMetrics.find(m => m.mesKey === 'Septiembre');
+    if (latestClosedMetric) {
+      momFacturadoPorc = latestClosedMetric.crecimientoFacturacionMoM;
+      momFacturadoDiff = latestClosedMetric.diferenciaFacturacionMoM;
+      momGananciaPorc = latestClosedMetric.crecimientoGananciaMoM;
+      momGananciaDiff = latestClosedMetric.diferenciaGananciaMoM;
     }
   } else {
     const foundMetric = monthlyMetrics.find(m => m.mesKey === selectedMonth);

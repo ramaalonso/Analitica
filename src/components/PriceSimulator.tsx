@@ -29,8 +29,8 @@ export const PriceSimulator: React.FC<PriceSimulatorProps> = ({ performances }) 
   // Elasticity factor
   const elasticityFactor = elasticityMode === 'inelastic' ? 0.25 : elasticityMode === 'moderate' ? 0.6 : 0.0;
 
-  // Run simulation
-  const simulation = simulatePriceChange(performances, percentChange, elasticityFactor);
+  // Run simulation with both global percentage and individual product custom overrides
+  const simulation = simulatePriceChange(performances, percentChange, elasticityFactor, customPrices);
 
   const presets = [-10, -5, 0, 5, 10, 15, 20];
 
@@ -294,8 +294,44 @@ export const PriceSimulator: React.FC<PriceSimulatorProps> = ({ performances }) 
                   <td className="py-3 px-3.5 font-medium text-stone-600">
                     ${Math.round(item.precioActual).toLocaleString('es-AR')}
                   </td>
-                  <td className="py-3 px-3.5 font-black text-[#0f4b25]">
-                    ${Math.round(item.precioNuevo).toLocaleString('es-AR')}
+                  <td className="py-2.5 px-3.5">
+                    <div className="flex items-center space-x-1.5">
+                      <span className="text-stone-400 font-mono text-xs">$</span>
+                      <input
+                        type="number"
+                        step="100"
+                        value={customPrices[item.productoKey] ?? Math.round(item.precioNuevo)}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val > 0) {
+                            handleCustomPriceChange(item.productoKey, val);
+                          } else if (e.target.value === '') {
+                            const next = { ...customPrices };
+                            delete next[item.productoKey];
+                            setCustomPrices(next);
+                          }
+                        }}
+                        className={`w-24 px-2 py-1 text-xs font-bold font-mono rounded-lg border transition-all ${
+                          item.isCustom 
+                            ? 'bg-amber-50 border-[#e68628] text-stone-900 shadow-2xs font-black' 
+                            : 'bg-stone-50 border-stone-200 text-[#0f4b25] hover:border-stone-400'
+                        }`}
+                        title="Escribí un precio específico para este producto"
+                      />
+                      {item.isCustom && (
+                        <button
+                          onClick={() => {
+                            const next = { ...customPrices };
+                            delete next[item.productoKey];
+                            setCustomPrices(next);
+                          }}
+                          className="text-[10px] text-amber-700 hover:text-rose-600 font-bold px-1 py-0.5 rounded"
+                          title="Restablecer al porcentaje general"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-3.5 font-semibold text-stone-800">
                     {item.unidadesProyectadas} u. <span className="text-[10px] text-stone-400">({item.unidadesActuales} u. hoy)</span>

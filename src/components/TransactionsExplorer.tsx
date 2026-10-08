@@ -755,12 +755,22 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
                 <span>Imprimir Ticket / PDF</span>
               </button>
 
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(generateReceiptText(receiptSale))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-transform active:scale-95 shadow-xs cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-100" />
+                <span>Enviar por WhatsApp</span>
+              </a>
+
               <button
                 onClick={() => copyReceiptToClipboard(receiptSale)}
                 className="w-full sm:w-auto py-3 px-4 rounded-2xl bg-amber-100 hover:bg-amber-200 text-stone-900 border border-amber-300 font-bold text-xs flex items-center justify-center space-x-1.5 transition-transform active:scale-95 cursor-pointer"
               >
                 {copiedReceipt ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-stone-700" />}
-                <span>{copiedReceipt ? '¡Copiado!' : 'Copiar para WhatsApp'}</span>
+                <span>{copiedReceipt ? '¡Copiado!' : 'Copiar Texto'}</span>
               </button>
             </div>
 

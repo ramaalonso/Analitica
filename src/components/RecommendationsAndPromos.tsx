@@ -286,9 +286,10 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
       const gainWithCoupon = priceWithCoupon - combo.costoTotal;
       const marginWithCoupon = priceWithCoupon > 0 ? parseFloat(((gainWithCoupon / priceWithCoupon) * 100).toFixed(1)) : 0;
 
-      // When a web coupon is simulated/active (>0%), check marginWithCoupon
-      // When in direct sales mode (0%), check currentMargin
-      const effectiveMargin = couponRate > 0 ? marginWithCoupon : currentMargin;
+      // When a web coupon is simulated/active (>0%), check marginWithCoupon for web-compatible combos.
+      // For combos that are exclusively direct sales (WhatsApp/local), evaluate their real direct margin!
+      const isDirectOnly = !combo.cuponWebSugerido || combo.badge?.includes('Venta Directa');
+      const effectiveMargin = (couponRate > 0 && !isDirectOnly) ? marginWithCoupon : currentMargin;
 
       const isViable = effectiveMargin >= MIN_PROFIT_MARGIN_THRESHOLD;
       if (!isViable) {

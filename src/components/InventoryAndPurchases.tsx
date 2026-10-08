@@ -108,8 +108,14 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   // We merge dataset.stock and dataset.proxCompra
   const procurementItems = useMemo(() => {
     return dataset.stock.map(stockItem => {
-      const perf = performances.find(p => p.nombreOriginal.toLowerCase() === stockItem.nombre.toLowerCase());
-      const proxSheet = dataset.proxCompra.find(p => p.producto.toLowerCase() === stockItem.nombre.toLowerCase());
+      const perf = performances.find(p => 
+        p.producto === stockItem.nombreNormalizado || 
+        p.nombreOriginal.toLowerCase() === stockItem.nombre.toLowerCase()
+      );
+      const proxSheet = dataset.proxCompra.find(p => 
+        p.producto.toLowerCase() === stockItem.nombre.toLowerCase() ||
+        (stockItem.nombreNormalizado && p.producto.toLowerCase() === stockItem.nombreNormalizado)
+      );
       
       const restantes = stockItem.restantes;
       const costoUnitario = stockItem.precioCompra || (proxSheet ? proxSheet.costeUnidad : 0);

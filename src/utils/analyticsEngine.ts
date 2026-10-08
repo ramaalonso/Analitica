@@ -50,7 +50,9 @@ export const CHRONOLOGICAL_MONTHS = [
   'Julio',
   'Agosto',
   'Septiembre',
-  'Octubre'
+  'Octubre',
+  'Noviembre',
+  'Diciembre'
 ];
 
 export function computeMonthlyMetrics(ventas: SaleTransaction[]): MonthlyMetric[] {
@@ -244,12 +246,16 @@ export function computeProductPerformances(
     }
   }
 
-  // Determine active recent months for MoM trend (e.g. Septiembre vs Agosto)
-  const currentMonthKey = selectedMonth !== 'TODOS' ? selectedMonth : 'Septiembre';
-  const prevMonthKey = currentMonthKey === 'Septiembre' ? 'Agosto' :
-                       currentMonthKey === 'Agosto' ? 'Julio' :
-                       currentMonthKey === 'Julio' ? 'Junio' :
-                       currentMonthKey === 'Junio' ? 'Mayo' : 'Ventas Iniciales';
+  // Determine active recent months for MoM trend dynamically based on chronological order
+  const availableMonthsWithSales = CHRONOLOGICAL_MONTHS.filter(m => ventas.some(v => v.mes === m));
+  const latestMonth = availableMonthsWithSales.length > 0 
+    ? availableMonthsWithSales[availableMonthsWithSales.length - 1] 
+    : 'Octubre';
+  const currentMonthKey = selectedMonth !== 'TODOS' ? selectedMonth : latestMonth;
+  const currentMonthIdx = CHRONOLOGICAL_MONTHS.indexOf(currentMonthKey);
+  const prevMonthKey = currentMonthIdx > 0 
+    ? CHRONOLOGICAL_MONTHS[currentMonthIdx - 1] 
+    : 'Ventas Iniciales';
 
   const performances: ProductPerformance[] = [];
 
@@ -377,9 +383,10 @@ export function computeProductPerformances(
     }
 
     const webMatch = findWebProductMatch(originalName, webProducts);
+    const isOffer = Boolean(webMatch && (webMatch.isSale || (webMatch.salePrice && webMatch.salePrice < webMatch.price)));
     const precioWeb = webMatch ? webMatch.price : undefined;
-    const precioWebOferta = webMatch && webMatch.isSale ? webMatch.salePrice : null;
-    const webEnOferta = webMatch ? !!webMatch.isSale : false;
+    const precioWebOferta = isOffer ? webMatch?.salePrice : null;
+    const webEnOferta = isOffer;
     const webStockStatus = webMatch ? webMatch.stockStatus : undefined;
     const imagenUrl = webMatch?.image;
 
@@ -764,7 +771,8 @@ export function generateSmartCombos(
 export function simulatePriceChange(
   performances: ProductPerformance[],
   percentageChange: number, // e.g. +10 means +10%
-  elasticityFactor: number = 0.3 // 0.3 means 10% price increase reduces demand by 3%
+  elasticityFactor: number = 0.3, // 0.3 means 10% price increase reduces demand by 3%
+  customPrices: Record<string, number> = {}
 ): {
   currentRevenue: number;
   simulatedRevenue: number;
@@ -776,8 +784,10 @@ export function simulatePriceChange(
   simulatedMargin: number;
   impactTable: {
     producto: string;
+    productoKey: string;
     precioActual: number;
     precioNuevo: number;
+    isCustom: boolean;
     unidadesActuales: number;
     unidadesProyectadas: number;
     gananciaActual: number;
@@ -795,9 +805,23 @@ export function simulatePriceChange(
     const pCompra = p.precioCompra;
     const units = p.unidadesVendidas;
 
-    const pVentaNuevo = Math.round(pVenta * (1 + percentageChange / 100));
+    // Check if user set a custom price for this specific product
+    const customVal = customPrices[p.producto] ?? customPrices[p.nombreOriginal];
+    const isCustom = customVal !== undefined && customVal > 0;
+
+    let pVentaNuevo: number;
+    let effectivePctChange: number;
+
+    if (isCustom) {
+      pVentaNuevo = Math.round(customVal);
+      effectivePctChange = pVenta > 0 ? ((pVentaNuevo - pVenta) / pVenta) * 100 : 0;
+    } else {
+      pVentaNuevo = Math.round(pVenta * (1 + percentageChange / 100));
+      effectivePctChange = percentageChange;
+    }
+
     // Demand volume change based on elasticity
-    const volumeChangeFactor = 1 - (percentageChange / 100) * elasticityFactor;
+    const volumeChangeFactor = 1 - (effectivePctChange / 100) * elasticityFactor;
     const unitsProjected = Math.max(0, Math.round(units * volumeChangeFactor));
 
     const curRev = pVenta * units;
@@ -813,8 +837,10 @@ export function simulatePriceChange(
 
     return {
       producto: p.nombreOriginal,
+      productoKey: p.producto,
       precioActual: pVenta,
       precioNuevo: pVentaNuevo,
+      isCustom,
       unidadesActuales: units,
       unidadesProyectadas: unitsProjected,
       gananciaActual: curProf,
