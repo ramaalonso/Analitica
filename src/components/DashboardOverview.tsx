@@ -170,9 +170,60 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     ? goalGap / daysRemaining 
     : 0;
 
-  const avgPackPrice = 8500; // Canary standard price
-  const packsNeeded = Math.ceil(goalGap / avgPackPrice);
+  // Helper to extract catalog/store prices dynamically
+  const getCatalogPrice = (searchName: string, fallbackPrice: number): number => {
+    const webMatch = dataset.webStore?.products?.find(p => p.title.toLowerCase().includes(searchName.toLowerCase()));
+    if (webMatch) return webMatch.salePrice || webMatch.price;
+    const stockMatch = dataset.stock?.find(s => s.nombre.toLowerCase().includes(searchName.toLowerCase()));
+    if (stockMatch) return stockMatch.precioVenta;
+    return fallbackPrice;
+  };
+
+  // Real store average pack price from transactions
+  const storeAvgPackPrice = useMemo(() => {
+    if (currentUnidades > 0 && currentFacturado > 0) {
+      return Math.round(currentFacturado / currentUnidades);
+    }
+    return 10700;
+  }, [currentUnidades, currentFacturado]);
+
+  // Real Canarias and flagship varieties with exact names and prices from catalog/store
+  const packRefOptions = useMemo(() => [
+    { id: 'canarias_trad_1kg', name: 'Canarias Tradicional 1KG', price: getCatalogPrice('canarias tradicional 1kg', 10700), short: 'Canarias Trad. 1KG' },
+    { id: 'canarias_serena_1kg', name: 'Canarias Serena 1KG', price: getCatalogPrice('canarias serena 1kg', 11500), short: 'Canarias Serena 1KG' },
+    { id: 'canarias_esp_1kg', name: 'Canarias Edición Especial 1KG', price: getCatalogPrice('canarias edicion especial 1kg', 11700), short: 'Canarias Ed. Esp. 1KG' },
+    { id: 'canarias_verde_1kg', name: 'Canarias Té Verde y Jengibre 1KG', price: getCatalogPrice('te verde', 11700), short: 'Canarias Té Verde 1KG' },
+    { id: 'baldo_1kg', name: 'Baldo Tradicional 1KG', price: getCatalogPrice('baldo 1kg', 10900), short: 'Baldo Trad. 1KG' },
+    { id: 'promedio', name: 'Promedio general de tienda', price: storeAvgPackPrice, short: 'Promedio tienda' },
+    { id: 'canarias_trad_500g', name: 'Canarias Tradicional 500G', price: getCatalogPrice('canarias tradicional 500g', 6000), short: 'Canarias Trad. 500G' },
+    { id: 'canarias_serena_500g', name: 'Canarias Serena 500G', price: getCatalogPrice('canarias serena 500g', 6700), short: 'Canarias Serena 500G' },
+    { id: 'canarias_esp_500g', name: 'Canarias Edición Especial 500G', price: getCatalogPrice('canarias edicion especial 500g', 6700), short: 'Canarias Ed. Esp. 500G' }
+  ], [storeAvgPackPrice, dataset.webStore, dataset.stock]);
+
+  const [packRefId, setPackRefId] = useState<string>(() => {
+    try {
+      return localStorage.getItem('yerbazo_pack_ref_id') || 'canarias_trad_1kg';
+    } catch {
+      return 'canarias_trad_1kg';
+    }
+  });
+
+  const activePackRef = packRefOptions.find(o => o.id === packRefId) || packRefOptions[0];
+  const packsNeeded = Math.ceil(goalGap / Math.max(1, activePackRef.price));
   const projectedDiffVsGoal = projectedMonthRevenue - monthlyTarget;
+
+  // Dynamic top month for Insight Card 1
+  const topMonthMetric = useMemo(() => {
+    if (monthlyMetrics.length === 0) return null;
+    return [...monthlyMetrics].sort((a, b) => b.facturado - a.facturado)[0];
+  }, [monthlyMetrics]);
+
+  // Dynamic critical stock items for Insight Card 2
+  const criticalStockItems = useMemo(() => {
+    return dataset.stock
+      .filter(p => p.restantes <= 5 && p.vendidas > 0)
+      .sort((a, b) => a.restantes - b.restantes);
+  }, [dataset.stock]);
 
   // Star product
   const bestProduct = performances[0];
@@ -610,21 +661,45 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </span>
           </div>
 
-          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4">
-            <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase text-stone-400 tracking-wider">
-              <Package className="w-3.5 h-3.5 text-amber-300" />
-              <span>Equivalencia en Paquetes</span>
+          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase text-stone-400 tracking-wider">
+                <Package className="w-3.5 h-3.5 text-amber-300" />
+                <span>Equivalencia en Paquetes</span>
+              </div>
+              <div className="text-2xl font-black text-white font-display mt-1">
+                {isGoalReached ? (
+                  <span className="text-emerald-400 text-lg font-bold">0 faltantes 🎉</span>
+                ) : (
+                  <>~{packsNeeded} <span className="text-xs font-normal text-stone-400">paquetes</span></>
+                )}
+              </div>
             </div>
-            <div className="text-2xl font-black text-white font-display mt-1">
+
+            <div className="mt-2 pt-2 border-t border-stone-700/60">
               {isGoalReached ? (
-                <span className="text-emerald-400 text-lg font-bold">0 faltantes 🎉</span>
+                <span className="text-[11px] text-emerald-400 font-medium block">¡Objetivo 100% alcanzado!</span>
               ) : (
-                <>~{packsNeeded} <span className="text-xs font-normal text-stone-400">paquetes</span></>
+                <div className="flex items-center justify-between gap-1 text-[11px]">
+                  <span className="text-stone-400 shrink-0 font-medium">Ref:</span>
+                  <select
+                    value={packRefId}
+                    onChange={(e) => {
+                      setPackRefId(e.target.value);
+                      try { localStorage.setItem('yerbazo_pack_ref_id', e.target.value); } catch {}
+                    }}
+                    className="bg-stone-900 border border-stone-700 text-amber-300 text-[11px] font-bold rounded-lg px-2 py-0.5 focus:outline-none focus:border-amber-400 max-w-[200px] truncate cursor-pointer hover:border-stone-500 transition-colors"
+                    title="Seleccioná la variedad o producto de referencia para calcular la equivalencia"
+                  >
+                    {packRefOptions.map(opt => (
+                      <option key={opt.id} value={opt.id} className="bg-stone-900 text-stone-200">
+                        {opt.short} (${opt.price.toLocaleString('es-AR')})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
             </div>
-            <span className="text-[11px] text-stone-400 mt-1 block">
-              {isGoalReached ? '¡Objetivo 100% alcanzado!' : 'Ref: Canarias 1KG (~$8.500 c/u)'}
-            </span>
           </div>
 
         </div>
@@ -653,7 +728,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <TrendingUp className="w-4 h-4 text-emerald-700" />
               </div>
               <p className="text-xs text-stone-700 leading-relaxed font-medium">
-                Septiembre fue el <strong>mes récord de ventas</strong> con <strong>$890.741</strong> facturados y <strong>$116.174</strong> de ganancia, creciendo un <strong>+16.8%</strong> respecto a Agosto.
+                {topMonthMetric ? (
+                  <>
+                    <strong>{topMonthMetric.mesNombre}</strong> fue el <strong>mes récord de ventas</strong> con <strong>${topMonthMetric.facturado.toLocaleString('es-AR')}</strong> facturados y <strong>${topMonthMetric.ganancia.toLocaleString('es-AR')}</strong> de ganancia{topMonthMetric.crecimientoFacturacionMoM != null ? <>, creciendo un <strong>{topMonthMetric.crecimientoFacturacionMoM >= 0 ? '+' : ''}{topMonthMetric.crecimientoFacturacionMoM.toFixed(1)}%</strong> respecto al mes anterior</> : ''}.
+                  </>
+                ) : (
+                  <>Datos históricos de facturación mensual en constante actualización.</>
+                )}
               </p>
             </div>
             <button
@@ -675,7 +756,19 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <ShieldAlert className="w-4 h-4 text-amber-700" />
               </div>
               <p className="text-xs text-stone-700 leading-relaxed font-medium">
-                <strong>Canarias 1KG</strong> (4 u. restantes) y <strong>Baldo 1KG</strong> (11 u. restantes) están en zona de quiebre inminente. Tienen solo <strong>~7 a 12 días de cobertura</strong> al ritmo de venta actual.
+                {criticalStockItems.length > 0 ? (
+                  <>
+                    {criticalStockItems.slice(0, 2).map((item, idx) => (
+                      <React.Fragment key={item.nombre}>
+                        {idx > 0 ? ' y ' : ''}
+                        <strong className="capitalize">{item.nombre}</strong> ({item.restantes} u. restantes)
+                      </React.Fragment>
+                    ))}
+                    {' '}están en zona de quiebre inminente con bajo stock restante al ritmo de venta actual.
+                  </>
+                ) : (
+                  <>Todos los productos cuentan con niveles de inventario estables sin riesgo inmediato de quiebre.</>
+                )}
               </p>
             </div>
             <button
