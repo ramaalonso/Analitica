@@ -529,32 +529,32 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
   }), [timeView]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       
-      {/* Header */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border-b-4 border-[#e68628]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Header (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full mb-3 shadow-sm">
-              <TrendingUp className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-1.5 sm:space-x-2 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mb-1.5 sm:mb-3 shadow-sm">
+              <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>Análisis Evolutivo MoM</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
-              ¿Cuál mejoró respecto a un tiempo pasado y cómo facturé a comparación del mes anterior?
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
+              Comparativa entre Períodos
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Compara directamente dos meses cualquiera para ver la variación exacta en recaudación, ganancias y qué productos ganaron o perdieron ritmo comercial.
             </p>
           </div>
 
           {/* Period Selector Controls */}
-          <div className="bg-[#0a341a] p-3 rounded-2xl border border-white/20 flex flex-wrap items-center gap-3">
-            <div>
-              <span className="text-[10px] uppercase font-bold text-[#ece7d7]/70 block mb-1">Período Actual:</span>
+          <div className="bg-[#0a341a] p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-white/20 flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
+            <div className="flex-1 sm:flex-initial">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-[#ece7d7]/70 block mb-0.5 sm:mb-1">Período Actual:</span>
               <select
                 value={periodA}
                 onChange={(e) => setPeriodA(e.target.value)}
-                className="bg-[#ece7d7] text-[#0f4b25] text-xs font-bold px-3 py-1.5 rounded-xl focus:outline-none cursor-pointer"
+                className="w-full bg-[#ece7d7] text-[#0f4b25] text-xs font-bold px-2.5 py-1.5 rounded-lg sm:rounded-xl focus:outline-none cursor-pointer"
               >
                 {availableMonths.map(m => (
                   <option key={m} value={m}>{m}</option>
@@ -562,14 +562,14 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
               </select>
             </div>
 
-            <div className="text-[#e68628] font-black text-sm px-1">vs</div>
+            <div className="text-[#e68628] font-black text-xs sm:text-sm px-0.5 pt-3">vs</div>
 
-            <div>
-              <span className="text-[10px] uppercase font-bold text-[#ece7d7]/70 block mb-1">Período Anterior:</span>
+            <div className="flex-1 sm:flex-initial">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-[#ece7d7]/70 block mb-0.5 sm:mb-1">Período Anterior:</span>
               <select
                 value={periodB}
                 onChange={(e) => setPeriodB(e.target.value)}
-                className="bg-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-white/20 focus:outline-none cursor-pointer"
+                className="w-full bg-white/10 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg sm:rounded-xl border border-white/20 focus:outline-none cursor-pointer"
               >
                 {availableMonths.map(m => (
                   <option key={m} value={m} className="bg-[#0a341a] text-white">{m}</option>
@@ -581,28 +581,28 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
       </div>
 
       {/* Global Delta KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5">
         
         {/* Facturación Delta */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-stone-200">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-500 block mb-1 sm:mb-2">
             Variación de Facturación
           </span>
           <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-black text-stone-900 font-display">
+            <span className="text-xl sm:text-2xl font-black text-stone-900 font-display">
               ${factA.toLocaleString('es-AR')}
             </span>
             <span className="text-xs text-stone-400 font-medium">vs ${factB.toLocaleString('es-AR')}</span>
           </div>
 
-          <div className="mt-3 flex items-center">
+          <div className="mt-2 sm:mt-3 flex items-center">
             {deltaFact >= 0 ? (
-              <span className="inline-flex items-center text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
+              <span className="inline-flex items-center text-[11px] sm:text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
                 <ArrowUpRight className="w-4 h-4 mr-1 text-emerald-600" />
                 +{growthFactPorc.toFixed(1)}% (+${deltaFact.toLocaleString('es-AR')})
               </span>
             ) : (
-              <span className="inline-flex items-center text-xs font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">
+              <span className="inline-flex items-center text-[11px] sm:text-xs font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">
                 <ArrowDownRight className="w-4 h-4 mr-1 text-rose-600" />
                 {growthFactPorc.toFixed(1)}% (-${Math.abs(deltaFact).toLocaleString('es-AR')})
               </span>
@@ -611,25 +611,25 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
         </div>
 
         {/* Ganancia Delta */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-stone-200">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-500 block mb-1 sm:mb-2">
             Variación de Ganancia Neta
           </span>
           <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-black text-[#0f4b25] font-display">
+            <span className="text-xl sm:text-2xl font-black text-[#0f4b25] font-display">
               ${gainA.toLocaleString('es-AR')}
             </span>
             <span className="text-xs text-stone-400 font-medium">vs ${gainB.toLocaleString('es-AR')}</span>
           </div>
 
-          <div className="mt-3 flex items-center">
+          <div className="mt-2 sm:mt-3 flex items-center">
             {deltaGain >= 0 ? (
-              <span className="inline-flex items-center text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
+              <span className="inline-flex items-center text-[11px] sm:text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
                 <ArrowUpRight className="w-4 h-4 mr-1 text-emerald-600" />
                 +{growthGainPorc.toFixed(1)}% (+${deltaGain.toLocaleString('es-AR')})
               </span>
             ) : (
-              <span className="inline-flex items-center text-xs font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">
+              <span className="inline-flex items-center text-[11px] sm:text-xs font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">
                 <ArrowDownRight className="w-4 h-4 mr-1 text-rose-600" />
                 {growthGainPorc.toFixed(1)}% (-${Math.abs(deltaGain).toLocaleString('es-AR')})
               </span>
@@ -638,25 +638,25 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
         </div>
 
         {/* Unidades Delta */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-stone-200">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-stone-500 block mb-1 sm:mb-2">
             Variación de Paquetes Vendidos
           </span>
           <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-black text-stone-900 font-display">
+            <span className="text-xl sm:text-2xl font-black text-stone-900 font-display">
               {unitsA} u.
             </span>
             <span className="text-xs text-stone-400 font-medium">vs {unitsB} u.</span>
           </div>
 
-          <div className="mt-3 flex items-center">
+          <div className="mt-2 sm:mt-3 flex items-center">
             {deltaUnitsTotal >= 0 ? (
-              <span className="inline-flex items-center text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
+              <span className="inline-flex items-center text-[11px] sm:text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
                 <ArrowUpRight className="w-4 h-4 mr-1 text-emerald-600" />
                 +{deltaUnitsTotal} paquetes despachados
               </span>
             ) : (
-              <span className="inline-flex items-center text-xs font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">
+              <span className="inline-flex items-center text-[11px] sm:text-xs font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">
                 <ArrowDownRight className="w-4 h-4 mr-1 text-rose-600" />
                 {deltaUnitsTotal} paquetes vs período anterior
               </span>
@@ -667,7 +667,7 @@ export const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
       </div>
 
       {/* Temporal Evolution & Fortnight (15-Day) Comparative Section */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200 space-y-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200 space-y-4 sm:space-y-6">
         
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-stone-100">

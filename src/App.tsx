@@ -23,26 +23,72 @@ import { ClientsAndBilling } from './components/ClientsAndBilling';
 import { RepurchaseRadar } from './components/RepurchaseRadar';
 import { TransactionsExplorer } from './components/TransactionsExplorer';
 import { ExecutiveReportModal } from './components/ExecutiveReportModal';
+import { OrderManagementHub } from './components/OrderManagementHub';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Truck, DollarSign, PlusCircle, BarChart3, Package } from 'lucide-react';
 
 export function App() {
   const [dataset, setDataset] = useState<YerbazoDataset>(() => loadInitialDataset());
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>('pedidos');
+  const [ordersSubView, setOrdersSubView] = useState<'entregas' | 'cobros' | 'nuevo' | 'recientes'>('entregas');
   const [selectedMonth, setSelectedMonth] = useState<string>('TODOS');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncNotification, setSyncNotification] = useState<string | null>(null);
   const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
 
-  // Auto-sync in background on initial load if possible
+  // Auto-sync in background on initial load + continuous real-time polling with Google Sheets
   useEffect(() => {
-    // Attempt background live fetch
+    let isMounted = true;
+
+    // Initial full live fetch (including web store)
     fetchLiveGoogleSheet().then(updated => {
-      setDataset(updated);
+      if (isMounted) setDataset(updated);
     }).catch(err => {
       console.log('Running on bundled snapshot', err);
     });
+
+    // Silent background poll of Google Sheets so deletions/edits in "Copia de Yerbazo.ba" appear automatically
+    const pollGoogleSheet = () => {
+      if (document.visibilityState === 'hidden') return;
+      fetchLiveGoogleSheet({ skipWebStore: true }).then(updated => {
+        if (!isMounted) return;
+        setDataset(prev => ({
+          ...updated,
+          webStore: prev.webStore || updated.webStore,
+          lastWebSyncTime: prev.lastWebSyncTime || updated.lastWebSyncTime
+        }));
+      }).catch(() => {});
+    };
+
+    const intervalId = window.setInterval(pollGoogleSheet, 8000);
+    const handleFocusOrVisible = () => {
+      if (document.visibilityState === 'visible') {
+        pollGoogleSheet();
+      }
+    };
+
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+    };
   }, []);
+
+  // Compute pending deliveries and unpaid orders counts for badges
+  const pendingDeliveriesCount = useMemo(() => {
+    return dataset.ventas.filter(v => (v.entregado || '').toUpperCase() !== 'SI').length;
+  }, [dataset.ventas]);
+
+  const unpaidOrdersCount = useMemo(() => {
+    return dataset.ventas.filter(v => {
+      const p = (v.pago || '').toUpperCase();
+      return p === 'NO' || p.includes('PENDIENTE');
+    }).length;
+  }, [dataset.ventas]);
 
   // Compute derived analytics
   const monthlyMetrics = useMemo(() => {
@@ -189,13 +235,30 @@ export function App() {
         isSyncing={isSyncing}
         lastSyncTime={dataset.lastSyncTime}
         webStoreProductCount={dataset.webStore?.products?.length}
+        pendingDeliveriesCount={pendingDeliveriesCount}
+        unpaidOrdersCount={unpaidOrdersCount}
+        onQuickNewOrder={() => {
+          setOrdersSubView('nuevo');
+          setActiveTab('pedidos');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         onExportExcel={handleExportFullExcel}
         onOpenReportModal={() => setIsReportOpen(true)}
       />
 
       {/* Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-3 sm:py-8 pb-20 md:pb-8">
         <ErrorBoundary fallbackTitle="Hubo un inconveniente al cargar esta sección">
+          {activeTab === 'pedidos' && (
+            <OrderManagementHub
+              dataset={dataset}
+              onDatasetUpdate={setDataset}
+              onSyncSheets={handleSync}
+              isSyncing={isSyncing}
+              initialSubView={ordersSubView}
+            />
+          )}
+
           {activeTab === 'dashboard' && (
             <DashboardOverview
               dataset={dataset}
@@ -272,8 +335,105 @@ export function App() {
         </ErrorBoundary>
       </main>
 
+      {/* Mobile Sticky Bottom Navigation Bar (Thumb Ergonomics for Phone) */}
+      <nav
+        aria-label="Navegación rápida móvil"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0f4b25] text-[#ece7d7] border-t-2 border-[#e68628] shadow-2xl px-2 py-1.5 no-print"
+      >
+        <div className="grid grid-cols-5 gap-1 items-center">
+          <button
+            type="button"
+            onClick={() => {
+              setOrdersSubView('entregas');
+              setActiveTab('pedidos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl relative cursor-pointer ${
+              activeTab === 'pedidos' && ordersSubView === 'entregas'
+                ? 'bg-[#ece7d7] text-[#0f4b25] font-black'
+                : 'text-[#ece7d7]/80 font-bold'
+            }`}
+          >
+            <Truck className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">Entregas</span>
+            {pendingDeliveriesCount > 0 && (
+              <span className="absolute -top-1 right-2 bg-[#e68628] text-stone-950 text-[9px] font-black px-1.5 rounded-full">
+                {pendingDeliveriesCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOrdersSubView('cobros');
+              setActiveTab('pedidos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl relative cursor-pointer ${
+              activeTab === 'pedidos' && ordersSubView === 'cobros'
+                ? 'bg-[#ece7d7] text-[#0f4b25] font-black'
+                : 'text-[#ece7d7]/80 font-bold'
+            }`}
+          >
+            <DollarSign className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">Impagos</span>
+            {unpaidOrdersCount > 0 && (
+              <span className="absolute -top-1 right-2 bg-rose-500 text-white text-[9px] font-black px-1.5 rounded-full">
+                {unpaidOrdersCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOrdersSubView('nuevo');
+              setActiveTab('pedidos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex flex-col items-center justify-center py-2 rounded-2xl bg-[#e68628] text-stone-950 font-black shadow-lg -mt-3 border-2 border-[#0f4b25] cursor-pointer"
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">+ Pedido</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('dashboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl cursor-pointer ${
+              activeTab === 'dashboard'
+                ? 'bg-[#ece7d7] text-[#0f4b25] font-black'
+                : 'text-[#ece7d7]/80 font-bold'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">Resumen</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('stock');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl cursor-pointer ${
+              activeTab === 'stock'
+                ? 'bg-[#ece7d7] text-[#0f4b25] font-black'
+                : 'text-[#ece7d7]/80 font-bold'
+            }`}
+          >
+            <Package className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">Stock</span>
+          </button>
+        </div>
+      </nav>
+
       {/* Footer */}
-      <footer className="bg-[#0f4b25] text-[#ece7d7] py-8 border-t-4 border-[#e68628] mt-12 no-print">
+      <footer className="bg-[#0f4b25] text-[#ece7d7] py-8 pb-24 md:pb-8 border-t-4 border-[#e68628] mt-12 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 p-0.5 flex items-center justify-center border border-[#e68628]/40 overflow-hidden">

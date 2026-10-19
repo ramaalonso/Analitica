@@ -359,60 +359,60 @@ Avisanos cuando quieras hacer tu próximo pedido y ya te lo dejamos reservado co
         </div>
       )}
       
-      {/* Header Banner */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border-b-4 border-[#e68628]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Header Banner (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full shadow-sm">
-                <Users className="w-3.5 h-3.5" />
-                <span>Gestión de Clientes & Cobranzas</span>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-3">
+              <div className="inline-flex items-center space-x-1.5 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-sm">
+                <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span>Clientes & Cobranzas</span>
               </div>
-              <div className="inline-flex items-center space-x-1.5 bg-white/10 text-[#ece7d7] border border-white/20 text-xs px-3 py-1 rounded-full font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#e68628]" />
-                <span>Base Oficial Hoja Clientes ({dataset.clientes.length} clientes)</span>
+              <div className="inline-flex items-center space-x-1 bg-white/10 text-[#ece7d7] border border-white/20 text-[10px] sm:text-xs px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full font-medium">
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#e68628]" />
+                <span>{dataset.clientes.length} clientes</span>
               </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
-              Canales de Captación, Clientes VIP y Control de Cobros
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
+              Canales, Clientes VIP y Cobros
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Conoce de dónde provienen tus clientes (UADE, Rugby, Club, amigos), quiénes son los compradores más fieles y gestiona ventas con saldo pendiente de pago.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Top Metric Cards: 2x2 on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* Total Clientes Registrados */}
         <div 
           onClick={() => { setOnlyDebtors(false); setFrequencyFilter('ALL'); }}
-          className={`bg-white rounded-3xl p-6 shadow-sm border transition-all cursor-pointer ${
+          className={`bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm border transition-all cursor-pointer ${
             !onlyDebtors && frequencyFilter === 'ALL' ? 'border-[#0f4b25] ring-2 ring-[#0f4b25]/20' : 'border-stone-200 hover:border-stone-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-              Clientes Oficiales
+          <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">
+              Clientes
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#0f4b25] flex items-center justify-center">
-              <Users className="w-5 h-5" />
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-50 text-[#0f4b25] flex items-center justify-center">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-stone-900 font-display">
-            {dataset.clientes.length} clientes
+          <div className="text-lg sm:text-3xl font-black text-stone-900 font-display">
+            {dataset.clientes.length}
           </div>
-          <p className="text-xs text-stone-500 mt-2">
-            Base activa sincronizada con la pestaña Clientes
+          <p className="text-[10px] sm:text-xs text-stone-500 mt-1 sm:mt-2 truncate">
+            Base oficial activa
           </p>
         </div>
 
         {/* Clientes con Deuda Activa */}
         <div 
           onClick={() => setOnlyDebtors(!onlyDebtors)}
-          className={`rounded-3xl p-6 shadow-sm border-2 transition-all cursor-pointer ${
+          className={`rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm border-2 transition-all cursor-pointer ${
             onlyDebtors 
               ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20' 
               : totalUnpaidSalesAmount > 0 
@@ -420,21 +420,21 @@ Avisanos cuando quieras hacer tu próximo pedido y ya te lo dejamos reservado co
                 : 'bg-white border-stone-200'
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-              Saldo Pendiente de Cobro
+          <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold text-amber-900 uppercase tracking-wider">
+              Por Cobrar
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs sm:text-base">
               ⚠️
             </div>
           </div>
-          <div className="text-3xl font-black text-rose-700 font-display">
+          <div className="text-lg sm:text-3xl font-black text-rose-700 font-display truncate">
             ${totalUnpaidSalesAmount.toLocaleString('es-AR')}
           </div>
-          <p className="text-xs text-stone-600 mt-2 flex items-center justify-between">
-            <span>{unpaidSales.length} ventas sin cobrar</span>
-            <span className="font-bold underline text-rose-700">
-              {onlyDebtors ? 'Ver todos' : 'Filtrar deudores'}
+          <p className="text-[10px] sm:text-xs text-stone-600 mt-1 sm:mt-2 flex items-center justify-between">
+            <span>{unpaidSales.length} impagos</span>
+            <span className="hidden sm:inline font-bold underline text-rose-700">
+              {onlyDebtors ? 'Ver todos' : 'Filtrar'}
             </span>
           </p>
         </div>
@@ -442,46 +442,46 @@ Avisanos cuando quieras hacer tu próximo pedido y ya te lo dejamos reservado co
         {/* Clientes Activos este mes */}
         <div 
           onClick={() => setFrequencyFilter(frequencyFilter === 'activo' ? 'ALL' : 'activo')}
-          className={`bg-white rounded-3xl p-6 shadow-sm border transition-all cursor-pointer ${
+          className={`bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm border transition-all cursor-pointer ${
             frequencyFilter === 'activo' ? 'border-emerald-600 bg-emerald-50/30 ring-2 ring-emerald-500/20' : 'border-stone-200 hover:border-stone-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-              🟢 Activos (&lt; 30 días)
+          <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider">
+              🟢 Activos
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-              <Zap className="w-5 h-5" />
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-emerald-700 font-display">
-            {frequencyCounts.activo} clientes
+          <div className="text-lg sm:text-3xl font-black text-emerald-700 font-display">
+            {frequencyCounts.activo}
           </div>
-          <p className="text-xs text-stone-500 mt-2">
-            Compraron en las últimas 4 semanas
+          <p className="text-[10px] sm:text-xs text-stone-500 mt-1 sm:mt-2 truncate">
+            Últimos 30 días
           </p>
         </div>
 
         {/* Clientes en Riesgo */}
         <div 
           onClick={() => setFrequencyFilter(frequencyFilter === 'en_riesgo' ? 'ALL' : 'en_riesgo')}
-          className={`bg-white rounded-3xl p-6 shadow-sm border transition-all cursor-pointer ${
+          className={`bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm border transition-all cursor-pointer ${
             frequencyFilter === 'en_riesgo' ? 'border-amber-500 bg-amber-50/40 ring-2 ring-amber-500/20' : 'border-stone-200 hover:border-stone-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
-              🟡 En Riesgo (30 a 60d)
+          <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-wider">
+              🟡 En Riesgo
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-              <Clock className="w-5 h-5" />
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-amber-800 font-display">
-            {frequencyCounts.en_riesgo} clientes
+          <div className="text-lg sm:text-3xl font-black text-amber-800 font-display">
+            {frequencyCounts.en_riesgo}
           </div>
-          <p className="text-xs text-stone-500 mt-2">
-            Hace más de un mes que no piden yerba
+          <p className="text-[10px] sm:text-xs text-stone-500 mt-1 sm:mt-2 truncate">
+            30 a 60 días sin pedir
           </p>
         </div>
 
@@ -739,7 +739,106 @@ Avisanos cuando quieras hacer tu próximo pedido y ya te lo dejamos reservado co
           </button>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-stone-200">
+        {/* MOBILE CLIENT CARDS (md:hidden): Native phone cards with 1-tap WhatsApp actions */}
+        <div className="md:hidden space-y-2.5">
+          {filteredClients.map((c) => {
+            const daysSince = c.diasDesdeUltimaCompra !== undefined ? c.diasDesdeUltimaCompra : 999;
+            const freq = c.segmentoFrecuencia || 'inactivo';
+            const tier = c.clubMateroNivel || 'Cebador Inicial';
+
+            let tierIcon = '🥉';
+            let tierBg = 'bg-stone-100 text-stone-800';
+            if (tier === 'Matero VIP') {
+              tierIcon = '👑';
+              tierBg = 'bg-purple-100 text-purple-900 border border-purple-300';
+            } else if (tier === 'Matero Fiel') {
+              tierIcon = '🥇';
+              tierBg = 'bg-amber-100 text-amber-900 border border-amber-300';
+            } else if (tier === 'Matero Habitual') {
+              tierIcon = '🥈';
+              tierBg = 'bg-blue-100 text-blue-900 border border-blue-200';
+            }
+
+            return (
+              <div
+                key={c.cliente}
+                className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center flex-wrap gap-1">
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${tierBg}`}>
+                        {tierIcon} {tier}
+                      </span>
+                      <span className="text-[10px] font-semibold text-stone-600 bg-white border border-stone-200 px-1.5 py-0.5 rounded-md">
+                        {c.comoNosConocio}
+                      </span>
+                    </div>
+                    <div className="font-black text-stone-900 text-sm mt-1 truncate">
+                      {c.cliente}
+                    </div>
+                    {c.direccionEntrega && (
+                      <div className="text-[11px] text-stone-500 truncate">
+                        📍 {c.direccionEntrega}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <div className="font-black text-[#0f4b25] text-sm font-mono">
+                      ${c.totalGastado.toLocaleString('es-AR')}
+                    </div>
+                    <div className="text-[10px] font-bold text-stone-500">
+                      {c.totalCompras} {c.totalCompras === 1 ? 'pedido' : 'pedidos'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-stone-200/70">
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span className="text-stone-500">Últ: {c.ultimaCompra || '-'}</span>
+                    {daysSince < 900 && (
+                      <span className={`font-bold px-1.5 py-0.5 rounded-full ${
+                        freq === 'activo'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : freq === 'en_riesgo'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-rose-100 text-rose-800'
+                      }`}>
+                        {daysSince}d
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {c.saldoDeuda > 0 ? (
+                      <button
+                        onClick={() => setDebtModalClient(c)}
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-rose-600 text-white font-extrabold text-[11px] cursor-pointer"
+                      >
+                        <DollarSign className="w-3 h-3" />
+                        <span>Cobrar ${c.saldoDeuda.toLocaleString('es-AR')}</span>
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
+                        ✓ Al día
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setLoyaltyModalClient(c)}
+                      className="inline-flex items-center space-x-1 px-2 py-1 rounded-xl bg-stone-200/80 text-stone-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      <Award className="w-3 h-3 text-[#e68628]" />
+                      <span>Premio</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
               <tr>

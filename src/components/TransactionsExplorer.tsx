@@ -291,44 +291,44 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
         </div>
       )}
       
-      {/* Header Banner */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border-b-4 border-[#e68628] no-print">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Header Banner (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628] no-print">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full mb-3 shadow-sm">
-              <FileText className="w-3.5 h-3.5" />
-              <span>Libro Mayor de Ventas & Logística</span>
+            <div className="inline-flex items-center space-x-1.5 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mb-1.5 sm:mb-3 shadow-sm">
+              <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>Libro de Ventas & Logística</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
-              Explorador de Ventas, Nodos de Entrega y Remitos
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
+              Explorador de Ventas y Remitos
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Registro histórico completo de transacciones con clientes, agrupación logística por polos de entrega (UADE, Club, Mirador, Devoto) y emisión de comprobantes en 1 clic.
             </p>
           </div>
 
           <button
             onClick={handleExportFiltered}
-            className="px-4 py-2.5 rounded-2xl bg-[#e68628] hover:bg-[#cc721b] text-white font-bold text-xs sm:text-sm shadow-lg flex items-center space-x-2 self-start transition-transform active:scale-95 cursor-pointer"
+            className="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-[#e68628] hover:bg-[#cc721b] text-stone-950 font-black text-xs sm:text-sm shadow-md flex items-center space-x-1.5 self-start transition-transform active:scale-95 cursor-pointer"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Exportar Excel ({filtered.length})</span>
           </button>
         </div>
       </div>
 
       {/* Logística de Entregas por Zonas / Nodos Clave (Item 1) */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-sm no-print space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-stone-200 shadow-sm no-print space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-amber-100 text-[#e68628] flex items-center justify-center font-bold">
-              <Truck className="w-5 h-5" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-amber-100 text-[#e68628] flex items-center justify-center font-bold shrink-0">
+              <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-sm text-stone-900 font-display">
-                Logística de Entregas por Polos & Zonas
+              <h3 className="font-extrabold text-xs sm:text-sm text-stone-900 font-display">
+                Filtro por Polos & Zonas de Entrega
               </h3>
-              <p className="text-xs text-stone-500">
+              <p className="hidden sm:block text-xs text-stone-500">
                 Agrupá pedidos antes de salir a repartir para coordinar viajes y no duplicar recorridos
               </p>
             </div>
@@ -339,7 +339,7 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
               setOnlyPendingDeliveries(!onlyPendingDeliveries);
               setCurrentPage(1);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 self-start sm:self-auto ${
               onlyPendingDeliveries 
                 ? 'bg-rose-600 text-white shadow-xs' 
                 : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
@@ -352,142 +352,133 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
           </button>
         </div>
 
-        {/* Node Filter Buttons */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-100 text-xs">
+        {/* Node Filter Buttons (Horizontal scroll on mobile) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-stone-100 text-xs">
           <button
             onClick={() => { setNodeFilter('ALL'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer ${
               nodeFilter === 'ALL' ? 'bg-[#0f4b25] text-white shadow-xs' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            Todos los Nodos
+            Todos
           </button>
 
           <button
             onClick={() => { setNodeFilter('uade'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer flex items-center space-x-1 ${
               nodeFilter === 'uade' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'
             }`}
           >
-            <span>🎓 Polo UADE</span>
+            <span>🎓 UADE</span>
             {logisticsSummary.uadePending > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black ml-1">
-                {logisticsSummary.uadePending} pend.
+                {logisticsSummary.uadePending}
               </span>
             )}
           </button>
 
           <button
             onClick={() => { setNodeFilter('club'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer flex items-center space-x-1 ${
               nodeFilter === 'club' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
             }`}
           >
-            <span>🏉 Polo Club / Rugby</span>
+            <span>🏉 Club</span>
             {logisticsSummary.clubPending > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black ml-1">
-                {logisticsSummary.clubPending} pend.
+                {logisticsSummary.clubPending}
               </span>
             )}
           </button>
 
           <button
             onClick={() => { setNodeFilter('mirador'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer flex items-center space-x-1 ${
               nodeFilter === 'mirador' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
             }`}
           >
-            <span>🏡 Polo Mirador</span>
+            <span>🏡 Mirador</span>
             {logisticsSummary.miradorPending > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black ml-1">
-                {logisticsSummary.miradorPending} pend.
+                {logisticsSummary.miradorPending}
               </span>
             )}
           </button>
 
           <button
             onClick={() => { setNodeFilter('devoto'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer flex items-center space-x-1 ${
               nodeFilter === 'devoto' ? 'bg-purple-600 text-white shadow-xs' : 'bg-purple-50 text-purple-900 hover:bg-purple-100'
             }`}
           >
-            <span>📍 Corredor Devoto / Beiró</span>
+            <span>📍 Devoto</span>
             {logisticsSummary.devotoPending > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black ml-1">
-                {logisticsSummary.devotoPending} pend.
+                {logisticsSummary.devotoPending}
               </span>
             )}
           </button>
 
           <button
             onClick={() => { setNodeFilter('otros'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer flex items-center space-x-1 ${
               nodeFilter === 'otros' ? 'bg-stone-700 text-white shadow-xs' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            <span>📦 Domicilio / Otros</span>
+            <span>📦 Domicilio</span>
             {logisticsSummary.otrosPending > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black ml-1">
-                {logisticsSummary.otrosPending} pend.
+                {logisticsSummary.otrosPending}
               </span>
             )}
           </button>
         </div>
       </div>
 
-      {/* Main Table Container */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200 space-y-6">
+      {/* Main List/Table Container */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 shadow-sm border border-stone-200 space-y-4 sm:space-y-6">
         
         {/* Secondary Filter Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
             {/* Mes */}
-            <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-stone-500">Mes:</span>
-              <select
-                value={monthFilter}
-                onChange={(e) => { setMonthFilter(e.target.value); setCurrentPage(1); }}
-                className="bg-stone-50 border border-stone-300 rounded-xl px-2.5 py-1.5 font-bold text-stone-800 text-xs focus:ring-2 focus:ring-[#0f4b25]"
-              >
-                <option value="TODOS">Todos los Meses</option>
-                {CHRONOLOGICAL_MONTHS.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={monthFilter}
+              onChange={(e) => { setMonthFilter(e.target.value); setCurrentPage(1); }}
+              className="bg-stone-50 border border-stone-300 rounded-xl px-2 py-1.5 font-bold text-stone-800 text-[11px] sm:text-xs focus:ring-2 focus:ring-[#0f4b25] truncate"
+            >
+              <option value="TODOS">Mes: Todos</option>
+              {CHRONOLOGICAL_MONTHS.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
 
             {/* Pago */}
-            <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-stone-500">Pago:</span>
-              <select
-                value={paymentFilter}
-                onChange={(e) => { setPaymentFilter(e.target.value as any); setCurrentPage(1); }}
-                className="bg-stone-50 border border-stone-300 rounded-xl px-2.5 py-1.5 font-bold text-stone-800 text-xs focus:ring-2 focus:ring-[#0f4b25]"
-              >
-                <option value="ALL">Todos los Pagos</option>
-                <option value="SI">Abonado (SI)</option>
-                <option value="NO">Pendiente (NO)</option>
-              </select>
-            </div>
+            <select
+              value={paymentFilter}
+              onChange={(e) => { setPaymentFilter(e.target.value as any); setCurrentPage(1); }}
+              className="bg-stone-50 border border-stone-300 rounded-xl px-2 py-1.5 font-bold text-stone-800 text-[11px] sm:text-xs focus:ring-2 focus:ring-[#0f4b25] truncate"
+            >
+              <option value="ALL">Pago: Todos</option>
+              <option value="SI">Abonados</option>
+              <option value="NO">Impagos</option>
+            </select>
 
             {/* Entrega */}
-            <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-stone-500">Entrega:</span>
-              <select
-                value={deliveryFilter}
-                onChange={(e) => { setDeliveryFilter(e.target.value as any); setCurrentPage(1); }}
-                className="bg-stone-50 border border-stone-300 rounded-xl px-2.5 py-1.5 font-bold text-stone-800 text-xs focus:ring-2 focus:ring-[#0f4b25]"
-              >
-                <option value="ALL">Todas las Entregas</option>
-                <option value="SI">Entregado (SI)</option>
-                <option value="NO">Pendiente (NO)</option>
-              </select>
-            </div>
+            <select
+              value={deliveryFilter}
+              onChange={(e) => { setDeliveryFilter(e.target.value as any); setCurrentPage(1); }}
+              className="bg-stone-50 border border-stone-300 rounded-xl px-2 py-1.5 font-bold text-stone-800 text-[11px] sm:text-xs focus:ring-2 focus:ring-[#0f4b25] truncate"
+            >
+              <option value="ALL">Entrega: Todas</option>
+              <option value="SI">Entregados</option>
+              <option value="NO">Pendientes</option>
+            </select>
           </div>
 
           {/* Search Box */}
-          <div className="relative min-w-[240px]">
+          <div className="relative min-w-[220px]">
             <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -500,8 +491,76 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
 
         </div>
 
-        {/* Transactions Table */}
-        <div className="overflow-x-auto rounded-2xl border border-stone-200">
+        {/* MOBILE CARD VIEW (md:hidden): Native phone cards without horizontal table scrolling */}
+        <div className="md:hidden space-y-2.5">
+          {paginated.map((v) => {
+            const addr = clientAddressMap.get(v.cliente.toLowerCase().trim()) || '';
+            const node = detectDeliveryNode(v, addr);
+            const isPaid = v.pago === 'SI' || v.pago === '';
+            const isDelivered = v.entregado === 'SI';
+
+            return (
+              <div
+                key={v.id}
+                className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center flex-wrap gap-1">
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border ${node.color}`}>
+                        {node.badge}
+                      </span>
+                      <span className="text-[10px] font-mono text-stone-400 font-bold">
+                        #{v.id} • {v.fecha}
+                      </span>
+                    </div>
+                    <div className="font-black text-stone-900 text-sm mt-0.5 truncate">
+                      {v.cliente}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-black text-stone-900 text-sm font-mono">
+                      ${v.precioFinal.toLocaleString('es-AR')}
+                    </div>
+                    <div className="text-[10px] font-bold text-[#0f4b25]">
+                      Gan: ${v.ganancia.toLocaleString('es-AR')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-stone-700 font-medium bg-white px-2.5 py-1.5 rounded-xl border border-stone-200/80">
+                  {v.items.map(i => `${i.cantidad}x ${i.producto}`).join(', ') || '-'}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-0.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      {isPaid ? '✅ Abonado' : '⏳ Impago'}
+                    </span>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      isDelivered ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                    }`}>
+                      {isDelivered ? '📦 Entregado' : '🚚 Por entregar'}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => setReceiptSale(v)}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#0f4b25] text-[#ece7d7] font-bold text-[11px] cursor-pointer shrink-0"
+                  >
+                    <Receipt className="w-3 h-3 text-[#e68628]" />
+                    <span>Remito</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* DESKTOP TABLE VIEW (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
               <tr>

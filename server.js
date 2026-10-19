@@ -13,18 +13,19 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Google Sheets proxy route
+// Google Sheets proxy route (always fresh, no cache)
 app.get('/api/sheet', (req, res) => {
   const gid = req.query.gid || '1558868693';
-  const targetUrl = `https://docs.google.com/spreadsheets/d/15hjl5YFZqSFRGuh1IEv7zHDRXrQPPfvRU8dijVOmWPY/export?format=csv&gid=${gid}`;
+  const targetUrl = `https://docs.google.com/spreadsheets/d/15hjl5YFZqSFRGuh1IEv7zHDRXrQPPfvRU8dijVOmWPY/export?format=csv&gid=${gid}&t=${Date.now()}`;
 
   const fetchWithRedirect = (url) => {
-    https.get(url, (proxyRes) => {
+    https.get(url, { headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' } }, (proxyRes) => {
       if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
         fetchWithRedirect(proxyRes.headers.location);
         return;
       }
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       proxyRes.pipe(res);
     }).on('error', (err) => {
       res.status(500).send(err.message);
@@ -55,6 +56,32 @@ app.get('/api/web-store', (req, res) => {
   }).on('error', (err) => {
     res.status(500).json({ error: err.message });
   });
+});
+
+// Google Sheets write proxy route (forwards POST to Google Apps Script following redirects)
+app.post('/api/sheet-write', async (req, res) => {
+  const { scriptUrl, payload } = req.body || {};
+  if (!scriptUrl || typeof scriptUrl !== 'string' || !scriptUrl.startsWith('https://script.google.com/')) {
+    return res.status(400).json({ ok: false, error: 'URL de Google Apps Script inválida o no configurada' });
+  }
+
+  try {
+    const response = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload || {}),
+      redirect: 'follow'
+    });
+    const text = await response.text();
+    try {
+      const json = JSON.parse(text);
+      return res.json(json);
+    } catch {
+      return res.json({ ok: response.ok, message: 'Enviado a Google Sheets', raw: text.slice(0, 200) });
+    }
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 // Serve frontend dist if built

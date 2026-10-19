@@ -302,29 +302,29 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
         </div>
       )}
 
-      {/* Strategic Header */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border-b-4 border-[#e68628]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Strategic Header (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full shadow-sm">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Motor Predictivo de Fidelización & Recompra</span>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-3">
+              <div className="inline-flex items-center space-x-1.5 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-sm">
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span>Radar de Recompra</span>
               </div>
-              <div className="inline-flex items-center space-x-1.5 bg-white/10 text-[#ece7d7] border border-white/20 text-xs px-3 py-1 rounded-full font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#e68628]" />
-                <span>Hoja Oficial Clientes ({counts.total} clientes)</span>
+              <div className="inline-flex items-center space-x-1 bg-white/10 text-[#ece7d7] border border-white/20 text-[10px] sm:text-xs px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full font-medium">
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#e68628]" />
+                <span>{counts.total} clientes</span>
               </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
               Radar de Recompra: ¿Quién necesita yerba hoy?
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Calcula en tiempo real hace cuánto compró cada cliente y cuánta yerba le queda. Descubre su <strong>yerba favorita</strong> para tentarlo con una oferta justo antes de que compre en otro lado.
             </p>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden sm:flex items-center space-x-4">
             <div className="bg-[#0a341a] p-3 rounded-2xl border border-white/20 text-xs flex items-center space-x-2">
               <span className="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
               <div>
@@ -346,23 +346,23 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
       {/* Alerta de Quiebre de Stock Inminente (Item 4) */}
       {stockAlerts.length > 0 && (
-        <div className="bg-rose-50 border-2 border-rose-400 rounded-3xl p-5 text-rose-950 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center font-bold text-lg shrink-0">
+        <div className="bg-rose-50 border-2 border-rose-400 rounded-2xl sm:rounded-3xl p-4 sm:p-5 text-rose-950 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-rose-500 text-white flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
               🚨
             </div>
             <div>
-              <h4 className="font-black text-sm font-display text-rose-900 uppercase tracking-wide">
-                Alerta de Quiebre Inminente de Stock: Demanda de Recompra Supera Inventario
+              <h4 className="font-black text-xs sm:text-sm font-display text-rose-900 uppercase tracking-wide">
+                Alerta de Quiebre: Demanda de Recompra Supera Stock
               </h4>
-              <p className="text-xs text-rose-800/90 mt-0.5">
+              <p className="hidden sm:block text-xs text-rose-800/90 mt-0.5">
                 Hay clientes listos para comprar su yerba favorita hoy, pero tu stock en depósito no alcanza para cubrir la demanda estimada:
               </p>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
                 {stockAlerts.map(a => (
-                  <span key={a.yerbaName} className="inline-flex items-center space-x-1.5 bg-white border border-rose-300 text-rose-950 text-xs px-2.5 py-1 rounded-xl font-bold shadow-2xs">
+                  <span key={a.yerbaName} className="inline-flex items-center space-x-1 bg-white border border-rose-300 text-rose-950 text-[11px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl font-bold shadow-2xs">
                     <span>⚠️ {a.yerbaName}:</span>
-                    <span className="text-stone-600 font-normal">Demanda {a.demand}u | Stock {a.stock}u</span>
+                    <span className="text-stone-600 font-normal">Dem {a.demand}u | Stock {a.stock}u</span>
                     <span className="text-rose-700 font-black underline">(Faltan {a.missing}u)</span>
                   </span>
                 ))}
@@ -372,29 +372,29 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
         </div>
       )}
 
-      {/* KPI Cards: Urgencia y Oportunidad Comercial */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards: 2x2 on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* Card 1: Sin Yerba */}
         <div 
           onClick={() => setStatusFilter(statusFilter === 'sin_yerba' ? 'todos' : 'sin_yerba')}
-          className={`bg-white rounded-3xl p-5 border-2 transition-all cursor-pointer shadow-sm relative overflow-hidden ${
+          className={`bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 transition-all cursor-pointer shadow-sm relative overflow-hidden ${
             statusFilter === 'sin_yerba' ? 'border-rose-600 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-rose-200 hover:border-rose-400'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="bg-rose-100 text-rose-800 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              🔴 Sin Yerba (0%)
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="bg-rose-100 text-rose-800 text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              🔴 Sin Yerba
             </span>
-            <span className="text-xs font-bold text-stone-400">Urgencia #1</span>
+            <span className="hidden sm:inline text-xs font-bold text-stone-400">Urgencia #1</span>
           </div>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-black text-rose-700 font-display">
+          <div className="flex items-baseline space-x-1.5">
+            <span className="text-xl sm:text-3xl font-black text-rose-700 font-display">
               {counts.sinYerba}
             </span>
-            <span className="text-xs text-stone-500 font-medium">clientes</span>
+            <span className="text-[11px] sm:text-xs text-stone-500 font-medium">clientes</span>
           </div>
-          <p className="text-xs text-stone-600 mt-1.5 leading-snug">
+          <p className="hidden sm:block text-xs text-stone-600 mt-1.5 leading-snug">
             Ya consumieron todo su paquete. Escríbeles hoy con su yerba favorita antes de que compren en el supermercado.
           </p>
         </div>
@@ -402,23 +402,23 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
         {/* Card 2: Últimas Cebadas */}
         <div 
           onClick={() => setStatusFilter(statusFilter === 'ultimas_cebadas' ? 'todos' : 'ultimas_cebadas')}
-          className={`bg-white rounded-3xl p-5 border-2 transition-all cursor-pointer shadow-sm relative overflow-hidden ${
+          className={`bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 transition-all cursor-pointer shadow-sm relative overflow-hidden ${
             statusFilter === 'ultimas_cebadas' ? 'border-amber-500 bg-amber-50/30 ring-2 ring-amber-500/20' : 'border-amber-200 hover:border-amber-400'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="bg-amber-100 text-amber-900 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              🟠 Últimas Cebadas
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="bg-amber-100 text-amber-900 text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              🟠 Últimas
             </span>
-            <span className="text-xs font-bold text-stone-400">1% a 20%</span>
+            <span className="hidden sm:inline text-xs font-bold text-stone-400">1% a 20%</span>
           </div>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-black text-[#e68628] font-display">
+          <div className="flex items-baseline space-x-1.5">
+            <span className="text-xl sm:text-3xl font-black text-[#e68628] font-display">
               {counts.ultimas}
             </span>
-            <span className="text-xs text-stone-500 font-medium">clientes</span>
+            <span className="text-[11px] sm:text-xs text-stone-500 font-medium">clientes</span>
           </div>
-          <p className="text-xs text-stone-600 mt-1.5 leading-snug">
+          <p className="hidden sm:block text-xs text-stone-600 mt-1.5 leading-snug">
             Les quedan entre 2 y 6 días de yerba. <strong>Momento de oro</strong> para ofrecer reposición y envío programado.
           </p>
         </div>
@@ -426,38 +426,37 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
         {/* Card 3: Seguimiento y Recompras */}
         <div 
           onClick={() => setContactFilter(contactFilter === 'recompro' ? 'ALL' : 'recompro')}
-          className={`bg-white rounded-3xl p-5 border transition-all cursor-pointer shadow-sm relative overflow-hidden ${
+          className={`bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border transition-all cursor-pointer shadow-sm relative overflow-hidden ${
             contactFilter === 'recompro' ? 'border-emerald-600 bg-emerald-50/30 ring-2 ring-emerald-500/20' : 'border-stone-200 hover:border-stone-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="bg-emerald-100 text-emerald-900 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
-              <Award className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Recompras Logradas</span>
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="bg-emerald-100 text-emerald-900 text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
+              <Award className="w-3 h-3 text-emerald-700" />
+              <span>Recompras</span>
             </span>
-            <span className="text-xs font-bold text-emerald-700">{counts.conversionRate}% éxito</span>
+            <span className="text-[10px] sm:text-xs font-bold text-emerald-700">{counts.conversionRate}%</span>
           </div>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-black text-emerald-700 font-display">
+          <div className="flex items-baseline space-x-1.5">
+            <span className="text-xl sm:text-3xl font-black text-emerald-700 font-display">
               {counts.recompras}
             </span>
-            <span className="text-xs text-stone-500 font-medium">recompras cerradas</span>
+            <span className="text-[11px] sm:text-xs text-stone-500 font-medium">cerradas</span>
           </div>
-          <p className="text-xs text-stone-600 mt-1.5 leading-snug">
+          <p className="hidden sm:block text-xs text-stone-600 mt-1.5 leading-snug">
             {counts.contactados} clientes contactados en seguimiento.
           </p>
         </div>
 
         {/* Card 4: Yerba Favorita Más Repetida */}
-        <div className="bg-white rounded-3xl p-5 border border-stone-200 shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between mb-2">
-            <span className="bg-amber-100 text-amber-900 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
-              <Flame className="w-3.5 h-3.5 text-[#e68628]" />
-              <span>Yerba Más Querida</span>
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200 shadow-sm relative overflow-hidden">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="bg-amber-100 text-amber-900 text-[10px] sm:text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
+              <Flame className="w-3 h-3 text-[#e68628]" />
+              <span>Favorita</span>
             </span>
-            <span className="text-xs font-bold text-stone-400">Favorita</span>
           </div>
-          <div className="text-xl font-black text-stone-900 font-display truncate" title={counts.topFavYerba}>
+          <div className="text-sm sm:text-xl font-black text-stone-900 font-display truncate" title={counts.topFavYerba}>
             {counts.topFavYerba}
           </div>
           <p className="text-xs text-stone-600 mt-1.5 leading-snug">
@@ -468,16 +467,16 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
       </div>
 
       {/* Radar Main Table & Filters */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200 space-y-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200 space-y-4 sm:space-y-6">
         
         {/* Filter and Search Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
           
           {/* Status Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-stone-100 p-1.5 rounded-2xl text-xs font-bold">
+          <div className="flex items-center gap-1.5 bg-stone-100 p-1.5 rounded-2xl text-[11px] sm:text-xs font-bold overflow-x-auto no-scrollbar">
             <button
               onClick={() => setStatusFilter('todos')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
                 statusFilter === 'todos' 
                   ? 'bg-white text-stone-900 shadow-xs' 
                   : 'text-stone-600 hover:text-stone-900'
@@ -488,7 +487,7 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
             <button
               onClick={() => setStatusFilter('sin_yerba')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
                 statusFilter === 'sin_yerba' 
                   ? 'bg-rose-600 text-white shadow-xs' 
                   : 'text-rose-700 hover:bg-rose-50'
@@ -500,19 +499,19 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
             <button
               onClick={() => setStatusFilter('ultimas_cebadas')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
                 statusFilter === 'ultimas_cebadas' 
                   ? 'bg-[#e68628] text-white shadow-xs' 
                   : 'text-[#e68628] hover:bg-amber-50'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-[#e68628]"></span>
-              <span>🟠 Últimas Cebadas ({counts.ultimas})</span>
+              <span>🟠 Últimas ({counts.ultimas})</span>
             </button>
 
             <button
               onClick={() => setStatusFilter('medio')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
                 statusFilter === 'medio' 
                   ? 'bg-yellow-600 text-white shadow-xs' 
                   : 'text-yellow-700 hover:bg-yellow-50'
@@ -524,7 +523,7 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
             <button
               onClick={() => setStatusFilter('abastecido')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
                 statusFilter === 'abastecido' 
                   ? 'bg-emerald-600 text-white shadow-xs' 
                   : 'text-emerald-700 hover:bg-emerald-50'
@@ -544,11 +543,11 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
                 title="Volver al orden predeterminado (más urgentes arriba)"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-[#e68628]" />
-                <span>Restablecer orden prioritario</span>
+                <span>Restablecer orden</span>
               </button>
             )}
 
-            <div className="relative min-w-[220px]">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -563,15 +562,15 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
         </div>
 
         {/* Contact Tracking Filter Pills (Item 3) */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-100 text-xs">
-          <span className="font-bold text-stone-500 mr-1 flex items-center space-x-1">
+        <div className="flex items-center gap-1.5 pt-2 border-t border-stone-100 text-[11px] sm:text-xs overflow-x-auto no-scrollbar">
+          <span className="font-bold text-stone-500 mr-1 flex items-center space-x-1 shrink-0">
             <Clock className="w-3.5 h-3.5 text-stone-400" />
-            <span>Estado de contacto:</span>
+            <span>Contacto:</span>
           </span>
 
           <button
             onClick={() => setContactFilter('ALL')}
-            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer shrink-0 ${
               contactFilter === 'ALL' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
@@ -580,7 +579,7 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
           <button
             onClick={() => setContactFilter('pendiente')}
-            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
               contactFilter === 'pendiente' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
             }`}
           >
@@ -589,7 +588,7 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
           <button
             onClick={() => setContactFilter('contactado')}
-            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
               contactFilter === 'contactado' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'
             }`}
           >
@@ -598,7 +597,7 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
 
           <button
             onClick={() => setContactFilter('recompro')}
-            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center space-x-1 shrink-0 ${
               contactFilter === 'recompro' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
             }`}
           >
@@ -607,7 +606,7 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
         </div>
 
         {/* Priority Banner info */}
-        <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200/70 flex items-center justify-between text-xs text-amber-950">
+        <div className="hidden sm:flex p-3 bg-amber-50/80 rounded-2xl border border-amber-200/70 items-center justify-between text-xs text-amber-950">
           <div className="flex items-center space-x-2">
             <span className="text-base">🎯</span>
             <span className="font-medium">
@@ -619,8 +618,132 @@ Avisanos si querés que te alcancemos yerba fresca esta semana a tu domicilio o 
           </span>
         </div>
 
-        {/* Radar Table */}
-        <div className="overflow-x-auto rounded-2xl border border-stone-200 shadow-2xs">
+        {/* MOBILE RADAR CARDS (< md) */}
+        <div className="md:hidden space-y-2.5">
+          {displayedClients.map((client) => {
+            const isSinYerba = client.estadoConsumo === 'sin_yerba';
+            const isUltimas = client.estadoConsumo === 'ultimas_cebadas';
+            const isMedio = client.estadoConsumo === 'medio';
+            const contactStatus = contactTracking[client.cliente]?.status || 'pendiente';
+
+            return (
+              <div
+                key={`mob-radar-${client.cliente}`}
+                className={`p-3 rounded-2xl border transition-all ${
+                  isSinYerba
+                    ? 'bg-rose-50/30 border-rose-200'
+                    : isUltimas
+                    ? 'bg-amber-50/30 border-amber-200'
+                    : 'bg-stone-50/70 border-stone-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-black text-stone-900 text-sm truncate">
+                      {client.cliente}
+                    </div>
+                    <div className="text-[11px] text-stone-500 flex items-center flex-wrap gap-1 mt-0.5">
+                      <span>📅 {client.ultimaFecha} ({client.diasDesdeUltimaCompra}d)</span>
+                      <span>• {client.yerbasUltimaCompra || `${client.kgCompradosUltima}kg`}</span>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    {isSinYerba ? (
+                      <span className="inline-flex items-center font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full text-[10px] uppercase">
+                        🔴 0% Sin Yerba
+                      </span>
+                    ) : isUltimas ? (
+                      <span className="inline-flex items-center font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full text-[10px] uppercase">
+                        🟠 {client.porcentajeRestante}% Últimas
+                      </span>
+                    ) : isMedio ? (
+                      <span className="inline-flex items-center font-bold text-yellow-900 bg-yellow-100 px-2 py-0.5 rounded-full text-[10px] uppercase">
+                        🟡 {client.porcentajeRestante}% Medio
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px] uppercase">
+                        🟢 {client.porcentajeRestante}% OK
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full h-1.5 rounded-full bg-stone-200 overflow-hidden mt-2">
+                  <div
+                    style={{ width: `${client.porcentajeRestante}%` }}
+                    className={`h-full ${
+                      isSinYerba ? 'bg-rose-500' : isUltimas ? 'bg-[#e68628]' : isMedio ? 'bg-yellow-500' : 'bg-emerald-500'
+                    }`}
+                  />
+                </div>
+
+                {/* Favorite Yerba & Offer */}
+                <div className="mt-2 p-2 rounded-xl bg-white border border-stone-200/80 flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center space-x-1.5 min-w-0">
+                    <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 shrink-0" />
+                    <span className="font-extrabold text-stone-900 truncate text-[11px]">{client.yerbaFavorita}</span>
+                  </div>
+                  <div className="shrink-0 flex items-center space-x-1.5 text-[11px]">
+                    <span className="line-through text-stone-400">${client.precioRegularFavorita.toLocaleString('es-AR')}</span>
+                    <span className="font-black text-[#e68628] bg-amber-100 px-1.5 py-0.5 rounded">
+                      ${client.precioOfertaTentadora.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom row: Contact Status + WhatsApp / Copy buttons */}
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <select
+                    value={contactStatus}
+                    onChange={(e) => handleUpdateContactStatus(client.cliente, e.target.value as ContactStatus)}
+                    className={`text-[11px] font-bold px-2 py-1.5 rounded-xl border transition-all cursor-pointer outline-none ${
+                      contactStatus === 'recompro'
+                        ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                        : contactStatus === 'contactado'
+                        ? 'bg-blue-100 text-blue-900 border-blue-300'
+                        : contactStatus === 'pospuesto'
+                        ? 'bg-stone-100 text-stone-600 border-stone-300'
+                        : 'bg-amber-100 text-amber-900 border-amber-300'
+                    }`}
+                  >
+                    <option value="pendiente">🟡 Pendiente</option>
+                    <option value="contactado">🔵 Contactado</option>
+                    <option value="recompro">🟢 Recompró 🎉</option>
+                    <option value="pospuesto">⚪ Posponer</option>
+                  </select>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setSelectedClientForOffer(client);
+                        setDiscountPercent(10);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#0f4b25] text-[#ece7d7] text-[11px] font-black flex items-center space-x-1 shadow-xs active:scale-95 cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3 text-[#e68628]" />
+                      <span>Oferta WA</span>
+                    </button>
+                    <button
+                      onClick={() => handleCopyPitch(client, 10)}
+                      className="p-1.5 rounded-xl bg-amber-100 text-stone-900 border border-amber-300 active:scale-95 cursor-pointer"
+                      title="Copiar mensaje 10% OFF"
+                    >
+                      {copiedClientId === client.cliente ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-stone-700" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* DESKTOP Radar Table (>= md) */}
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200 shadow-2xs">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
               <tr>

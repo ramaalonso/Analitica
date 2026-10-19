@@ -87,18 +87,18 @@ export const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
   return (
     <div className="space-y-8">
       
-      {/* Header Banner */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Header Banner (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full mb-3 shadow-sm">
-              <Award className="w-3.5 h-3.5" />
-              <span>Diagnóstico & Ranking de Productos</span>
+            <div className="inline-flex items-center space-x-1.5 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mb-1.5 sm:mb-3 shadow-sm">
+              <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>Ranking de Productos</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
-              ¿Cuál es el mejor producto de Yerbazo y cuánto se vende de cada uno?
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
+              Ranking, Rotación y Rentabilidad por Producto
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Evaluación multicriterio integral: combinamos volumen físico, recaudación en pesos, porcentaje de rentabilidad y constancia en el tiempo para definir la estrategia de cada artículo.
             </p>
           </div>
@@ -535,8 +535,65 @@ export const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
           </div>
         </div>
 
-        {/* Responsive Table */}
-        <div className="overflow-x-auto rounded-2xl border border-stone-200">
+        {/* MOBILE PRODUCT CARDS (md:hidden): Native phone ranking cards */}
+        <div className="md:hidden space-y-2.5">
+          {sorted.map((p, idx) => (
+            <div
+              key={p.producto}
+              onClick={() => onSelectProduct?.(p)}
+              className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <span className="w-6 h-6 rounded-full bg-[#0f4b25] text-[#ece7d7] font-black text-xs flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-black text-stone-900 text-sm truncate">
+                      {p.nombreOriginal}
+                    </div>
+                    <div className="text-[11px] text-stone-500 flex items-center flex-wrap gap-1.5 mt-0.5">
+                      <span className="font-bold text-[#0f4b25]">{p.marca}</span>
+                      <span>•</span>
+                      <span>{p.peso}</span>
+                      <span>•</span>
+                      <span className="font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded">
+                        {p.margenPorc.toFixed(1)}% margen
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="font-black text-[#0f4b25] text-sm font-mono">
+                    ${p.facturacionTotal.toLocaleString('es-AR')}
+                  </div>
+                  <div className="text-[10px] font-bold text-[#e68628]">
+                    Gan: ${p.gananciaTotal.toLocaleString('es-AR')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] bg-white px-2.5 py-1.5 rounded-xl border border-stone-200/80">
+                <span className="font-bold text-stone-800">
+                  📦 {p.unidadesVendidas} vendidas
+                </span>
+                <span className={`font-black ${
+                  p.stockActual === 0 ? 'text-rose-600' :
+                  p.stockActual <= 4 ? 'text-amber-600' : 'text-stone-700'
+                }`}>
+                  Stock: {p.stockActual} u.
+                </span>
+                <span className="font-bold text-stone-500">
+                  Score: {p.scoreIntegral}/100
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Responsive Table (Desktop) */}
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200 select-none">
               <tr>

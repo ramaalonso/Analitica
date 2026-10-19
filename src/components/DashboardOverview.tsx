@@ -347,75 +347,75 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Strategic Headline & Period Context */}
-      <div className="bg-gradient-to-r from-[#0f4b25] via-[#145d2f] to-[#0f4b25] rounded-3xl p-6 sm:p-8 text-[#ece7d7] shadow-xl border border-emerald-900 relative overflow-hidden">
+      {/* Strategic Headline & Period Context (Compact on mobile, rich on desktop) */}
+      <div className="bg-gradient-to-r from-[#0f4b25] via-[#145d2f] to-[#0f4b25] rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-[#ece7d7] shadow-md sm:shadow-xl border border-emerald-900 relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-[#e68628]/20 to-transparent pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4">
           <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="bg-[#e68628] text-stone-900 font-extrabold text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+            <div className="flex items-center space-x-2 mb-1 sm:mb-2">
+              <span className="bg-[#e68628] text-stone-900 font-extrabold text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Panel Gerencial
               </span>
-              <span className="text-xs text-[#ece7d7]/70">
-                {isAllMonths ? 'Período: Histórico Consolidado 2026' : `Período: Mes de ${selectedMonth} 2026`}
+              <span className="text-[11px] sm:text-xs text-[#ece7d7]/75 font-medium">
+                {isAllMonths ? 'Histórico 2026' : `Mes: ${selectedMonth} 2026`}
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
-              {isAllMonths ? 'Diagnóstico General de Negocio Yerbazo' : `Desempeño y Facturación de ${selectedMonth}`}
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-white leading-tight">
+              {isAllMonths ? 'Diagnóstico General Yerbazo' : `Desempeño de ${selectedMonth}`}
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-2xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-2xl mt-1">
               Monitoreo en tiempo real de facturación, márgenes netos, rotación de paquetes de yerba y alertas de reposición de stock.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigateTab('recomendaciones')}
-              className="px-4 py-2.5 rounded-2xl bg-[#e68628] hover:bg-[#cc721b] text-white font-bold text-xs sm:text-sm shadow-lg flex items-center space-x-2 transition-transform active:scale-95"
+              className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-[#e68628] hover:bg-[#cc721b] text-stone-950 font-black text-xs sm:text-sm shadow-md flex items-center space-x-1.5 transition-transform active:scale-95 cursor-pointer"
             >
-              <Zap className="w-4 h-4" />
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Ver Promociones Recomendadas</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards Grid: 2x2 on mobile for instant scan without scrolling, 4 cols on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* Facturación */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-          <div className="flex items-center justify-between relative z-10 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Facturación Total</span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100/70 flex items-center justify-center text-[#0f4b25]">
-              <DollarSign className="w-5 h-5" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="hidden sm:block absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="flex items-center justify-between relative z-10 mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">Facturación</span>
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-100/70 flex items-center justify-center text-[#0f4b25]">
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
           <div className="relative z-10">
-            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
+            <div className="text-lg sm:text-3xl font-extrabold text-stone-900 tracking-tight truncate">
               ${currentFacturado.toLocaleString('es-AR')}
             </div>
             
             {/* MoM growth badge */}
-            <div className="flex items-center mt-2 text-xs">
+            <div className="flex flex-wrap items-center mt-1.5 sm:mt-2 text-[10px] sm:text-xs gap-1">
               {momFacturadoPorc !== null ? (
                 momFacturadoPorc >= 0 ? (
-                  <span className="flex items-center font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg mr-2">
-                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                    +{momFacturadoPorc.toFixed(1)}% vs mes ant.
+                  <span className="flex items-center font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                    <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                    +{momFacturadoPorc.toFixed(1)}%
                   </span>
                 ) : (
-                  <span className="flex items-center font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg mr-2">
-                    <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
-                    {momFacturadoPorc.toFixed(1)}% vs mes ant.
+                  <span className="flex items-center font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded-md">
+                    <ArrowDownRight className="w-3 h-3 mr-0.5" />
+                    {momFacturadoPorc.toFixed(1)}%
                   </span>
                 )
               ) : (
-                <span className="text-stone-400">Total acumulado</span>
+                <span className="text-stone-400">Acumulado</span>
               )}
               {momFacturadoDiff !== null && (
-                <span className="text-stone-400 font-medium">
+                <span className="hidden sm:inline text-stone-400 font-medium">
                   ({momFacturadoDiff >= 0 ? '+' : ''}${Math.round(momFacturadoDiff).toLocaleString('es-AR')})
                 </span>
               )}
@@ -424,25 +424,25 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Ganancia Neta */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-          <div className="flex items-center justify-between relative z-10 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Ganancia Realizada</span>
-            <div className="w-10 h-10 rounded-2xl bg-amber-100/70 flex items-center justify-center text-[#e68628]">
-              <TrendingUp className="w-5 h-5" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="hidden sm:block absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="flex items-center justify-between relative z-10 mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">Ganancia Neta</span>
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-100/70 flex items-center justify-center text-[#e68628]">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
           <div className="relative z-10">
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#0f4b25] tracking-tight">
+            <div className="text-lg sm:text-3xl font-extrabold text-[#0f4b25] tracking-tight truncate">
               ${currentGanancia.toLocaleString('es-AR')}
             </div>
-            <div className="flex items-center mt-2 text-xs">
-              <span className="font-bold text-[#e68628] bg-amber-50 px-2 py-0.5 rounded-lg mr-2 flex items-center">
-                <Percent className="w-3 h-3 mr-0.5" />
-                {margenGeneral.toFixed(1)}% margen neto
+            <div className="flex flex-wrap items-center mt-1.5 sm:mt-2 text-[10px] sm:text-xs gap-1">
+              <span className="font-bold text-[#e68628] bg-amber-50 px-1.5 py-0.5 rounded-md flex items-center">
+                <Percent className="w-2.5 h-2.5 mr-0.5" />
+                {margenGeneral.toFixed(1)}% margen
               </span>
               {momGananciaPorc !== null && (
-                <span className={`font-semibold ${momGananciaPorc >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                <span className={`hidden sm:inline font-semibold ${momGananciaPorc >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                   {momGananciaPorc >= 0 ? '+' : ''}{momGananciaPorc.toFixed(1)}% MoM
                 </span>
               )}
@@ -451,56 +451,56 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Unidades & Pedidos */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-stone-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-          <div className="flex items-center justify-between relative z-10 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Volumen de Ventas</span>
-            <div className="w-10 h-10 rounded-2xl bg-stone-200/70 flex items-center justify-center text-stone-800">
-              <Package className="w-5 h-5" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="hidden sm:block absolute top-0 right-0 w-24 h-24 bg-stone-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="flex items-center justify-between relative z-10 mb-1.5 sm:mb-3">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">Volumen</span>
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-stone-200/70 flex items-center justify-center text-stone-800">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
           <div className="relative z-10">
-            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
-              {currentUnidades} <span className="text-base font-normal text-stone-500">paquetes</span>
+            <div className="text-lg sm:text-3xl font-extrabold text-stone-900 tracking-tight">
+              {currentUnidades} <span className="text-xs sm:text-base font-normal text-stone-500">paq.</span>
             </div>
-            <div className="flex items-center mt-2 text-xs text-stone-500 space-x-2">
-              <span className="bg-stone-100 px-2 py-0.5 rounded-md font-semibold text-stone-700">
-                {currentVentas} transacciones
+            <div className="flex flex-wrap items-center mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-stone-500 gap-1">
+              <span className="bg-stone-100 px-1.5 py-0.5 rounded-md font-semibold text-stone-700">
+                {currentVentas} ventas
               </span>
-              <span>•</span>
-              <span>Ticket prom: <strong>${Math.round(ticketPromedio).toLocaleString('es-AR')}</strong></span>
+              <span className="hidden sm:inline">•</span>
+              <span className="truncate">Prom: <strong>${Math.round(ticketPromedio).toLocaleString('es-AR')}</strong></span>
             </div>
           </div>
         </div>
 
         {/* Producto Estrella & Alerta Stock */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-          <div className="flex items-center justify-between relative z-10 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Producto Estrella</span>
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-700">
-              <Award className="w-5 h-5" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="hidden sm:block absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="flex items-center justify-between relative z-10 mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">Top Yerba</span>
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-100 flex items-center justify-center text-amber-700">
+              <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
           <div className="relative z-10">
-            <div className="text-lg font-black text-[#0f4b25] truncate" title={bestProduct?.nombreOriginal}>
+            <div className="text-sm sm:text-lg font-black text-[#0f4b25] truncate" title={bestProduct?.nombreOriginal}>
               {bestProduct?.nombreOriginal || 'Baldo Tradicional 1KG'}
             </div>
-            <div className="flex items-center justify-between mt-2 text-xs">
-              <span className="text-stone-600 font-semibold">
-                {bestProduct?.unidadesVendidas} u. (${bestProduct?.facturacionTotal.toLocaleString('es-AR')})
+            <div className="flex flex-wrap items-center justify-between mt-1.5 sm:mt-2 text-[10px] sm:text-xs gap-1">
+              <span className="text-stone-600 font-semibold truncate">
+                {bestProduct?.unidadesVendidas} u.
               </span>
               {criticalStockCount > 0 ? (
                 <button
                   onClick={() => onNavigateTab('stock')}
-                  className="flex items-center text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-bold hover:bg-amber-100 transition-colors"
+                  className="flex items-center text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md font-bold hover:bg-amber-100 transition-colors cursor-pointer"
                 >
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  {criticalStockCount} en alerta
+                  <AlertTriangle className="w-3 h-3 mr-0.5" />
+                  {criticalStockCount} alerta
                 </button>
               ) : (
                 <span className="text-emerald-700 flex items-center font-semibold">
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> Stock óptimo
+                  <CheckCircle2 className="w-3 h-3 mr-0.5" /> OK
                 </span>
               )}
             </div>
@@ -510,54 +510,54 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       </div>
 
       {/* 🎯 Tracker de Metas Mensuales y Proyección de Facturación en Vivo */}
-      <div className="bg-gradient-to-br from-stone-900 via-stone-850 to-stone-900 text-white rounded-3xl p-6 sm:p-7 shadow-xl border-2 border-stone-800 space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-stone-800">
-          <div className="flex items-start space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#e68628] text-stone-950 flex items-center justify-center shrink-0 shadow-lg font-black">
-              <Target className="w-6 h-6" />
+      <div className="bg-gradient-to-br from-stone-900 via-stone-850 to-stone-900 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-xl border-2 border-stone-800 space-y-4 sm:space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-stone-800">
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#e68628] text-stone-950 flex items-center justify-center shrink-0 shadow-lg font-black">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-                  Tracker de Metas & Proyección en Vivo
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
+                  Meta Mensual
                 </span>
-                <span className="text-xs text-stone-400 font-medium">
-                  Mes de {targetMonthKey} ({isCurrentMonth ? `Día ${daysElapsed} de ${daysInTargetMonth} • Quedan ${daysRemaining} días` : isPastMonth ? `Mes cerrado (${daysInTargetMonth} días)` : `Mes próximo`})
+                <span className="text-[11px] text-stone-400 font-medium">
+                  {targetMonthKey} ({isCurrentMonth ? `Día ${daysElapsed}/${daysInTargetMonth}` : isPastMonth ? `Cerrado` : `Próximo`})
                 </span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black font-display text-white mt-1">
-                Meta de Facturación: ${monthlyTarget.toLocaleString('es-AR')}
+              <h3 className="text-base sm:text-2xl font-black font-display text-white mt-0.5">
+                Objetivo: ${monthlyTarget.toLocaleString('es-AR')}
               </h3>
-              <p className="text-xs text-stone-400 mt-0.5">
-                Llevas facturado <strong className="text-amber-400">${targetFacturado.toLocaleString('es-AR')}</strong> ({goalProgressPct}% alcanzado) con <strong className="text-emerald-400">${targetGanancia.toLocaleString('es-AR')}</strong> de ganancia neta.
+              <p className="text-[11px] sm:text-xs text-stone-400 mt-0.5">
+                Facturado: <strong className="text-amber-400">${targetFacturado.toLocaleString('es-AR')}</strong> ({goalProgressPct}%) • Ganancia: <strong className="text-emerald-400">${targetGanancia.toLocaleString('es-AR')}</strong>
               </p>
             </div>
           </div>
 
           {/* Quick Target Editor */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
-            <div className="bg-stone-800/90 border border-stone-700 rounded-2xl p-2 flex items-center space-x-2">
-              <span className="text-xs text-stone-400 font-bold px-2">Editar Meta:</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="bg-stone-800/90 border border-stone-700 rounded-xl p-1.5 flex items-center space-x-1.5">
+              <span className="text-[11px] text-stone-400 font-bold px-1.5">Meta:</span>
               <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">$</span>
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-xs">$</span>
                 <input
                   type="number"
                   step="50000"
                   min="100000"
                   value={monthlyTarget}
                   onChange={(e) => setMonthlyTarget(Math.max(100000, parseInt(e.target.value, 10) || 100000))}
-                  className="w-32 bg-stone-900 text-amber-400 font-black text-sm pl-6 pr-2 py-1.5 rounded-xl border border-stone-700 focus:outline-none focus:border-amber-400"
+                  className="w-28 sm:w-32 bg-stone-900 text-amber-400 font-black text-xs sm:text-sm pl-5 pr-2 py-1 rounded-lg border border-stone-700 focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>
 
             {/* Presets */}
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center space-x-1">
               {[800000, 1000000, 1200000, 1500000].map(amt => (
                 <button
                   key={amt}
                   onClick={() => setMonthlyTarget(amt)}
-                  className={`text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
+                  className={`text-[10px] sm:text-[11px] font-bold px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
                     monthlyTarget === amt 
                       ? 'bg-amber-400 text-stone-950 font-black shadow-sm' 
                       : 'bg-stone-800 hover:bg-stone-700 text-stone-300'
@@ -571,21 +571,21 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Progress Bar with Milestone Markers */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs">
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center text-[11px] sm:text-xs">
             <span className="font-bold text-stone-300">
-              Progreso actual: <span className="text-amber-400 font-extrabold">{goalProgressPct}%</span>
+              Progreso: <span className="text-amber-400 font-extrabold">{goalProgressPct}%</span>
             </span>
             <span className="text-stone-400">
               {goalGap > 0 ? (
-                <span>Faltan <strong className="text-amber-300 font-bold">${goalGap.toLocaleString('es-AR')}</strong> para el objetivo</span>
+                <span>Faltan <strong className="text-amber-300 font-bold">${goalGap.toLocaleString('es-AR')}</strong></span>
               ) : (
-                <span className="text-emerald-400 font-bold">🎉 ¡Meta 100% superada!</span>
+                <span className="text-emerald-400 font-bold">🎉 ¡Meta superada!</span>
               )}
             </span>
           </div>
 
-          <div className="w-full bg-stone-800 rounded-2xl h-5 p-1 relative overflow-hidden border border-stone-700">
+          <div className="w-full bg-stone-800 rounded-2xl h-4 sm:h-5 p-1 relative overflow-hidden border border-stone-700">
             <div 
               className={`h-full rounded-xl transition-all duration-700 relative ${
                 goalProgressPct >= 100 
@@ -602,76 +602,70 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* 4 Live Projection KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           
-          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4">
-            <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase text-stone-400 tracking-wider">
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span>Ritmo Diario Actual</span>
+          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-3 sm:p-4">
+            <div className="flex items-center space-x-1 text-[10px] sm:text-[11px] font-bold uppercase text-stone-400 tracking-wider">
+              <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
+              <span className="truncate">Ritmo Diario</span>
             </div>
-            <div className="text-2xl font-black text-amber-400 font-display mt-1">
-              ${Math.round(dailyPace).toLocaleString('es-AR')} <span className="text-xs font-normal text-stone-400">/día</span>
+            <div className="text-base sm:text-2xl font-black text-amber-400 font-display mt-1 truncate">
+              ${Math.round(dailyPace).toLocaleString('es-AR')}<span className="text-[10px] sm:text-xs font-normal text-stone-400">/d</span>
             </div>
-            <span className="text-[11px] text-stone-400 mt-1 block">
-              {isCurrentMonth ? `Promedio real en ${daysElapsed} días transcurridos` : `Promedio del mes (${daysElapsed} días)`}
+            <span className="text-[10px] sm:text-[11px] text-stone-400 mt-0.5 block truncate">
+              {daysElapsed} días corridos
             </span>
           </div>
 
-          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4">
-            <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase text-stone-400 tracking-wider">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Proyección a Fin de Mes</span>
+          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-3 sm:p-4">
+            <div className="flex items-center space-x-1 text-[10px] sm:text-[11px] font-bold uppercase text-stone-400 tracking-wider">
+              <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
+              <span className="truncate">Proyección Mes</span>
             </div>
-            <div className="text-2xl font-black text-emerald-400 font-display mt-1">
+            <div className="text-base sm:text-2xl font-black text-emerald-400 font-display mt-1 truncate">
               ${Math.round(projectedMonthRevenue).toLocaleString('es-AR')}
             </div>
-            <span className="text-[11px] text-stone-400 mt-1 block">
+            <span className="text-[10px] sm:text-[11px] text-stone-400 mt-0.5 block truncate">
               {isPastMonth ? (
-                <span className="text-stone-400">Cierre final del mes</span>
+                <span className="text-stone-400">Cierre final</span>
               ) : projectedDiffVsGoal >= 0 ? (
-                <span className="text-emerald-400 font-medium">+{Math.round(projectedDiffVsGoal).toLocaleString('es-AR')} sobre la meta</span>
+                <span className="text-emerald-400 font-medium">+${Math.round(projectedDiffVsGoal).toLocaleString('es-AR')} vs meta</span>
               ) : (
-                <span className="text-rose-400 font-medium">-${Math.abs(Math.round(projectedDiffVsGoal)).toLocaleString('es-AR')} vs objetivo</span>
+                <span className="text-rose-400 font-medium">-${Math.abs(Math.round(projectedDiffVsGoal)).toLocaleString('es-AR')} vs meta</span>
               )}
             </span>
           </div>
 
-          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4">
-            <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase text-stone-400 tracking-wider">
-              <Zap className="w-3.5 h-3.5 text-sky-400" />
-              <span>Ritmo Requerido</span>
+          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-3 sm:p-4">
+            <div className="flex items-center space-x-1 text-[10px] sm:text-[11px] font-bold uppercase text-stone-400 tracking-wider">
+              <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400 shrink-0" />
+              <span className="truncate">Ritmo Necesario</span>
             </div>
-            <div className="text-2xl font-black text-sky-400 font-display mt-1">
+            <div className="text-base sm:text-2xl font-black text-sky-400 font-display mt-1 truncate">
               {isGoalReached ? (
-                <span className="text-emerald-400 text-lg font-bold">¡Meta Cumplida! 🎉</span>
+                <span className="text-emerald-400 text-sm sm:text-lg font-bold">¡Cumplida! 🎉</span>
               ) : daysRemaining > 0 ? (
-                <>${Math.round(requiredDailyPace).toLocaleString('es-AR')} <span className="text-xs font-normal text-stone-400">/día</span></>
+                <>${Math.round(requiredDailyPace).toLocaleString('es-AR')}<span className="text-[10px] sm:text-xs font-normal text-stone-400">/d</span></>
               ) : (
-                <span className="text-rose-400 text-lg font-bold">Mes Cerrado</span>
+                <span className="text-rose-400 text-sm sm:text-lg font-bold">Mes Cerrado</span>
               )}
             </div>
-            <span className="text-[11px] text-stone-400 mt-1 block">
-              {isGoalReached ? (
-                <span className="text-emerald-400 font-medium">Superaste el 100% del objetivo</span>
-              ) : daysRemaining > 0 ? (
-                `Para los ${daysRemaining} días restantes`
-              ) : (
-                <span className="text-stone-400 font-medium">Faltaron ${goalGap.toLocaleString('es-AR')} para la meta</span>
-              )}
+            <span className="text-[10px] sm:text-[11px] text-stone-400 mt-0.5 block truncate">
+              {isGoalReached ? 'Objetivo superado' : daysRemaining > 0 ? `En ${daysRemaining} días rest.` : `Faltaron $${goalGap.toLocaleString('es-AR')}`}
             </span>
           </div>
 
-          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-3 sm:p-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase text-stone-400 tracking-wider">
-                <Package className="w-3.5 h-3.5 text-amber-300" />
-                <span>Equivalencia en Paquetes</span>
+              <div className="flex items-center space-x-1 text-[10px] sm:text-[11px] font-bold uppercase text-stone-400 tracking-wider">
+                <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300 shrink-0" />
+                <span className="truncate">Equiv. Paquetes</span>
               </div>
-              <div className="text-2xl font-black text-white font-display mt-1">
+              <div className="text-base sm:text-2xl font-black text-white font-display mt-1 truncate">
                 {isGoalReached ? (
-                  <span className="text-emerald-400 text-lg font-bold">0 faltantes 🎉</span>
+                  <span className="text-emerald-400 text-sm sm:text-lg font-bold">0 faltantes 🎉</span>
                 ) : (
-                  <>~{packsNeeded} <span className="text-xs font-normal text-stone-400">paquetes</span></>
+                  <>~{packsNeeded} <span className="text-[10px] sm:text-xs font-normal text-stone-400">paq.</span></>
                 )}
               </div>
             </div>

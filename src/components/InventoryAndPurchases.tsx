@@ -472,84 +472,84 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   return (
     <div className="space-y-8">
       
-      {/* Header */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border-b-4 border-[#e68628]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Header (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full mb-3 shadow-sm">
-              <Package className="w-3.5 h-3.5" />
-              <span>Planificador Inteligente de Abastecimiento</span>
+            <div className="inline-flex items-center space-x-1.5 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mb-1.5 sm:mb-3 shadow-sm">
+              <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>Stock & Próxima Compra</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
-              Próxima Compra: Recomendación Inteligente & Cálculo de Inversión
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
+              Control de Stock y Próxima Compra
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Consulta cuánto te recomendamos comprar según tu ritmo de venta real, define manualmente tus cantidades y proyecta en tiempo real cuánto te costará y cuántas unidades te quedarán.
             </p>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards: Depósito & Inversión */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards: 2x2 on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* Total a Pagar por esta Compra */}
-        <div className="bg-gradient-to-br from-amber-50 to-white rounded-3xl p-5 border-2 border-[#e68628] shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-600">¿Cuánto me saldrá comprar?</span>
-            <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#e68628] flex items-center justify-center font-black">
+        <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 border-[#e68628] shadow-sm">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-600">Costo Compra</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-orange-100 text-[#e68628] flex items-center justify-center font-black text-xs sm:text-base">
               💰
             </div>
           </div>
-          <div className="text-3xl font-black text-[#e68628] font-display">
+          <div className="text-lg sm:text-3xl font-black text-[#e68628] font-display truncate">
             ${totalUserCost.toLocaleString('es-AR')}
           </div>
-          <span className="text-xs text-stone-600 mt-1 block font-medium">
-            Inversión en <strong>{totalUserUnits} paquetes</strong> ({totalItemsToBuyCount} productos)
+          <span className="text-[10px] sm:text-xs text-stone-600 mt-1 block font-medium truncate">
+            <strong>{totalUserUnits} paq.</strong> ({totalItemsToBuyCount} prod.)
           </span>
         </div>
 
         {/* Ganancia Proyectada por esta Compra */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Ganancia Potencial de Compra</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-[#0f4b25] flex items-center justify-center font-black">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">Ganancia Proy.</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 text-[#0f4b25] flex items-center justify-center font-black text-xs sm:text-base">
               📈
             </div>
           </div>
-          <div className="text-3xl font-black text-[#0f4b25] font-display">
+          <div className="text-lg sm:text-3xl font-black text-[#0f4b25] font-display truncate">
             ${totalUserProfit.toLocaleString('es-AR')}
           </div>
-          <span className="text-xs text-emerald-800 mt-1 block font-semibold">
-            Beneficio neto al vender lo que compres
+          <span className="text-[10px] sm:text-xs text-emerald-800 mt-1 block font-semibold truncate">
+            Al vender la compra
           </span>
         </div>
 
         {/* Capital Actual en Stock */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Stock Actual en Depósito</span>
-            <DollarSign className="w-5 h-5 text-stone-500" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">Stock Actual</span>
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-stone-500" />
           </div>
-          <div className="text-2xl font-black text-stone-900 font-display">
-            {totalStockUnits} <span className="text-sm font-normal text-stone-500">unidades</span>
+          <div className="text-lg sm:text-2xl font-black text-stone-900 font-display truncate">
+            {totalStockUnits} <span className="text-xs sm:text-sm font-normal text-stone-500">un.</span>
           </div>
-          <span className="text-xs text-stone-500 mt-1 block">
-            Valuación al costo: ${totalStockValuationCost.toLocaleString('es-AR')}
+          <span className="text-[10px] sm:text-xs text-stone-500 mt-1 block truncate">
+            Costo: ${totalStockValuationCost.toLocaleString('es-AR')}
           </span>
         </div>
 
         {/* Alerta de Quiebre */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">En Quiebre o Riesgo</span>
-            <ShieldAlert className="w-5 h-5 text-rose-600" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-stone-200">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-stone-500">En Riesgo</span>
+            <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />
           </div>
-          <div className="text-2xl font-black text-rose-700 font-display">
-            {criticalItems.length} productos
+          <div className="text-lg sm:text-2xl font-black text-rose-700 font-display truncate">
+            {criticalItems.length} prod.
           </div>
-          <span className="text-xs text-rose-800 font-semibold mt-1 block">
-            Tienen &lt; 7 a 12 días de cobertura
+          <span className="text-[10px] sm:text-xs text-rose-800 font-semibold mt-1 block truncate">
+            &lt; 7-12 días stock
           </span>
         </div>
 
@@ -925,8 +925,97 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           </button>
         </div>
 
-        {/* Interactive Procurement Table */}
-        <div className="overflow-x-auto rounded-2xl border border-stone-200">
+        {/* MOBILE PROCUREMENT CARDS (md:hidden): Touch-friendly stepper cards for phone */}
+        <div className="md:hidden space-y-2.5">
+          {filteredProcurement.map((item) => {
+            const isSelected = item.userQty > 0;
+            return (
+              <div
+                key={item.producto}
+                className={`p-3.5 rounded-2xl border space-y-2.5 ${
+                  isSelected ? 'bg-amber-50/50 border-amber-300' : 'bg-stone-50/70 border-stone-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-black text-stone-900 text-sm truncate">
+                      {item.producto}
+                    </div>
+                    <div className="text-[11px] text-stone-500 flex items-center flex-wrap gap-1.5 mt-0.5">
+                      <span className="font-bold text-[#0f4b25]">{item.marca}</span>
+                      <span>•</span>
+                      <span>Costo: ${item.costoUnitario.toLocaleString('es-AR')}</span>
+                      <span>•</span>
+                      <span>~{item.velocidadSemanal} u./sem</span>
+                    </div>
+                  </div>
+                  <span className={`font-black text-xs px-2 py-0.5 rounded-lg shrink-0 ${
+                    item.restantes === 0 ? 'bg-rose-100 text-rose-800' :
+                    item.restantes <= 4 ? 'bg-amber-100 text-amber-800' : 'bg-stone-200 text-stone-800'
+                  }`}>
+                    Stock: {item.restantes} u.
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-stone-200">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-stone-400 block">¿Cuánto compraré?</span>
+                    {item.smartRecommended > 0 ? (
+                      <button
+                        onClick={() => handleQuantityChange(item.producto, item.smartRecommended)}
+                        className="text-[11px] font-black text-emerald-800 underline cursor-pointer"
+                      >
+                        Sugerido: +{item.smartRecommended} u.
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-stone-400">Stock suficiente</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onClick={() => handleStepQuantity(item.producto, -1)}
+                      disabled={item.userQty <= 0}
+                      className="w-8 h-8 rounded-xl bg-stone-100 border border-stone-300 text-stone-800 font-black disabled:opacity-30 flex items-center justify-center"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.userQty}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                        handleQuantityChange(item.producto, isNaN(val) ? 0 : val);
+                      }}
+                      className="w-14 py-1 text-center rounded-xl border-2 border-amber-400 font-black text-sm text-stone-900 bg-white"
+                    />
+                    <button
+                      onClick={() => handleStepQuantity(item.producto, 1)}
+                      className="w-8 h-8 rounded-xl bg-[#0f4b25] text-white font-black flex items-center justify-center"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {item.userQty > 0 && (
+                  <div className="flex items-center justify-between text-xs pt-0.5 px-1">
+                    <span className="text-stone-600">
+                      Quedarán: <strong>{item.totalPostCompra} u.</strong> (~{item.diasCoberturaPostCompra}d)
+                    </span>
+                    <span className="font-black text-[#e68628]">
+                      Total: ${item.costoTotalCompra.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Interactive Procurement Table (Desktop) */}
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
               <tr>
@@ -1076,7 +1165,7 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
         </div>
 
         {/* Purchase Summary Bar */}
-        <div className="bg-[#f7f5ed] p-5 rounded-2xl border-2 border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-[#f7f5ed] p-4 sm:p-5 rounded-2xl border-2 border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <h4 className="font-black text-sm text-stone-900 uppercase tracking-wider font-display">
               Resumen Total de tu Próxima Orden
@@ -1089,21 +1178,21 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           <div className="flex flex-wrap items-center gap-4 text-right">
             <div>
               <span className="text-[10px] uppercase font-bold text-stone-400 block">Total a Pagar al Proveedor</span>
-              <span className="text-2xl font-black text-[#e68628] font-display">
+              <span className="text-xl sm:text-2xl font-black text-[#e68628] font-display">
                 ${totalUserCost.toLocaleString('es-AR')}
               </span>
             </div>
 
             <div className="border-l border-stone-300 pl-4">
               <span className="text-[10px] uppercase font-bold text-stone-400 block">Ganancia Proyectada al Vender</span>
-              <span className="text-2xl font-black text-[#0f4b25] font-display">
+              <span className="text-xl sm:text-2xl font-black text-[#0f4b25] font-display">
                 +${totalUserProfit.toLocaleString('es-AR')}
               </span>
             </div>
 
             <button
               onClick={handleCopyOrderWhatsApp}
-              className="px-4 py-2.5 rounded-xl bg-[#0f4b25] hover:bg-[#145d2f] text-white text-xs font-extrabold flex items-center space-x-1.5 shadow-md transition-all active:scale-95"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-[#0f4b25] hover:bg-[#145d2f] text-white text-xs font-extrabold flex items-center space-x-1.5 shadow-md transition-all active:scale-95"
             >
               {copiedOrder ? (
                 <>
@@ -1123,30 +1212,30 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
       </div>
 
       {/* Mates y Bombillas (Accessories tab) */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xl">🧉</span>
-              <h3 className="text-xl font-black text-stone-900 font-display">
-                Colección de Mates & Bombillas Artesanales
+              <span className="text-lg sm:text-xl">🧉</span>
+              <h3 className="text-base sm:text-xl font-black text-stone-900 font-display">
+                Mates & Bombillas Artesanales
               </h3>
             </div>
-            <p className="text-xs text-stone-500 mt-1">
+            <p className="hidden sm:block text-xs text-stone-500 mt-1">
               Integrado con la pestaña "mates - bombillas": stock disponible, modelos y valuación
             </p>
           </div>
 
-          <div className="text-xs font-bold text-stone-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
-            Valuación Total: <strong className="text-[#0f4b25]">${matesStockValuation.toLocaleString('es-AR')}</strong> ({matesStockUnits} unidades)
+          <div className="text-xs font-bold text-stone-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 self-start sm:self-auto">
+            Valuación: <strong className="text-[#0f4b25]">${matesStockValuation.toLocaleString('es-AR')}</strong> ({matesStockUnits} u.)
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {dataset.matesBombillas.map((mate) => (
-            <div key={mate.producto} className="p-4 rounded-2xl bg-[#fcfbf7] border border-stone-200 flex flex-col justify-between">
+            <div key={mate.producto} className="p-3.5 sm:p-4 rounded-2xl bg-[#fcfbf7] border border-stone-200 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                   <span className="text-[10px] font-bold uppercase text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
                     Artesanal
                   </span>
@@ -1158,11 +1247,11 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
                   {mate.producto}
                 </h4>
                 {mate.detalle && (
-                  <p className="text-[11px] text-stone-500 mb-3">{mate.detalle}</p>
+                  <p className="text-[11px] text-stone-500 mb-2 sm:mb-3">{mate.detalle}</p>
                 )}
               </div>
 
-              <div className="pt-3 border-t border-stone-200/70 flex items-center justify-between text-xs">
+              <div className="pt-2.5 sm:pt-3 border-t border-stone-200/70 flex items-center justify-between text-xs">
                 <div>
                   <span className="text-stone-400 block text-[10px]">Precio Unitario</span>
                   <span className="font-extrabold text-stone-800">${mate.precioUnidad.toLocaleString('es-AR')}</span>
@@ -1178,19 +1267,19 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
       </div>
 
       {/* Detailed Stock Inventory Table */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
-            <h3 className="text-xl font-black text-stone-900 font-display">
+            <h3 className="text-base sm:text-xl font-black text-stone-900 font-display">
               Existencias Físicas & Días de Cobertura
             </h3>
-            <p className="text-xs text-stone-500">
+            <p className="hidden sm:block text-xs text-stone-500">
               Cálculo de autonomía restante según la velocidad semanal de venta
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative min-w-[200px]">
+            <div className="relative flex-1 min-w-[180px]">
               <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -1215,7 +1304,44 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-stone-200">
+        {/* MOBILE STOCK CARDS (md:hidden) */}
+        <div className="md:hidden grid grid-cols-1 gap-2.5">
+          {filteredStock.map((item) => (
+            <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-black text-stone-900 text-sm truncate">
+                  {item.nombre}
+                </div>
+                <span className={`font-black text-xs px-2 py-0.5 rounded-lg shrink-0 ${
+                  item.restantes === 0 ? 'bg-rose-100 text-rose-700' :
+                  item.restantes <= 4 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-[#0f4b25]'
+                }`}>
+                  {item.restantes} u. rest.
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[11px] bg-white p-2 rounded-xl border border-stone-200/80">
+                <div>
+                  <span className="text-stone-400 block text-[10px]">Costo / Venta</span>
+                  <span className="font-bold text-stone-800">${item.precioCompra.toLocaleString('es-AR')}</span>
+                  <span className="text-stone-400"> → </span>
+                  <span className="font-black text-[#0f4b25]">${item.precioVenta.toLocaleString('es-AR')}</span>
+                </div>
+                <div>
+                  <span className="text-stone-400 block text-[10px]">Vendidas</span>
+                  <span className="font-bold text-stone-800">{item.vendidas} / {item.comprado} u.</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-stone-400 block text-[10px]">Autonomía</span>
+                  <span className="font-extrabold text-stone-800">
+                    {item.status === 'OUT' ? 'Agotado' : `~${item.diasCobertura}d`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
               <tr>

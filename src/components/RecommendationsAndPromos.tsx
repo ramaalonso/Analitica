@@ -309,39 +309,39 @@ export const RecommendationsAndPromos: React.FC<RecommendationsAndPromosProps> =
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       
-      {/* Strategic Header */}
-      <div className="bg-[#0f4b25] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border-b-4 border-[#e68628]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Strategic Header (Compact on mobile, full on desktop) */}
+      <div className="bg-[#0f4b25] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-md sm:shadow-xl relative overflow-hidden border-b-2 sm:border-b-4 border-[#e68628]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
           <div>
-            <div className="inline-flex items-center space-x-2 bg-[#e68628] text-stone-900 font-bold text-xs uppercase px-3 py-1 rounded-full mb-3 shadow-sm">
-              <Zap className="w-3.5 h-3.5" />
-              <span>Motor Táctico de Promociones Dinámicas</span>
+            <div className="inline-flex items-center space-x-1.5 sm:space-x-2 bg-[#e68628] text-stone-900 font-bold text-[10px] sm:text-xs uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mb-1.5 sm:mb-3 shadow-sm">
+              <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>Motor Táctico de Promociones</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-[#ece7d7]">
-              ¿Cuál promocionar dependiendo de cómo suben o bajan las ventas?
+            <h2 className="text-lg sm:text-3xl font-black font-display tracking-tight text-[#ece7d7] leading-tight">
+              ¿Cuál promocionar según tus ventas?
             </h2>
-            <p className="text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
+            <p className="hidden sm:block text-sm text-[#ece7d7]/80 max-w-3xl mt-1">
               Guía táctica para maximizar la rentabilidad de Yerbazo: qué empujar con combos, cuándo no hacer descuentos y cómo reactivar productos según la rotación del mes.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-start md:self-auto">
+          <div className="flex items-center gap-2 self-start md:self-auto">
             <button
               onClick={() => handleUpdatePromos(true)}
               disabled={isRecalculating || isSyncing}
-              className="px-5 py-3 rounded-2xl bg-[#e68628] hover:bg-[#cf741e] text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-3.5 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl bg-[#e68628] hover:bg-[#cf741e] text-stone-950 font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className={`w-4 h-4 text-stone-950 ${isRecalculating || isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isRecalculating || isSyncing ? 'Actualizando...' : 'Actualizar Promos Ahora'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-950 ${isRecalculating || isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isRecalculating || isSyncing ? 'Actualizando...' : 'Actualizar Promos Web'}</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Grid of the 3 Golden Rules */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
         
         {/* Rule 1: Escalado */}
         <div className="bg-white rounded-3xl p-6 border-2 border-emerald-500/40 shadow-sm relative overflow-hidden flex flex-col justify-between">

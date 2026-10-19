@@ -263,7 +263,7 @@ export function parseRawDataset(raw = RAW_SNAPSHOT_DATA): YerbazoDataset {
   
   for (let i = 1; i < ventasRows.length; i++) {
     const r = ventasRows[i];
-    if (!r || !r.some((c: any) => safeStr(c) !== '')) continue;
+    if (!r || (!safeStr(r[0]) && !safeStr(r[9]))) continue;
     
     const cliente = safeStr(r[0]);
     const id = safeStr(r[1]) || `YB-${i}`;
@@ -276,9 +276,9 @@ export function parseRawDataset(raw = RAW_SNAPSHOT_DATA): YerbazoDataset {
     }
     
     const medioPago = safeStr(r[5]) || 'No especificado';
-    const pago = (safeStr(r[6]) || 'SI').toUpperCase();
+    const pago = (safeStr(r[6]) || 'NO').toUpperCase();
     const observaciones = safeStr(r[7]);
-    const entregado = (safeStr(r[8]) || 'SI').toUpperCase();
+    const entregado = (safeStr(r[8]) || 'NO').toUpperCase();
     
     // Items
     const items: SaleItem[] = [];
@@ -308,6 +308,8 @@ export function parseRawDataset(raw = RAW_SNAPSHOT_DATA): YerbazoDataset {
     const semana = safeStr(r[25]);
     const ganancia = parseCurrency(r[26]);
     const deuda = safeStr(r[29]);
+    const isLocalOrder = r[30] === 'LOCAL_ORDER';
+    const syncedToSheet = r[31] === 'SYNCED';
 
     const standardizedMonth = standardizeMonthName(mesRaw, fechaRaw);
 
@@ -327,7 +329,9 @@ export function parseRawDataset(raw = RAW_SNAPSHOT_DATA): YerbazoDataset {
       semana,
       ganancia,
       deudaInfo: deuda,
-      rowIndex: i
+      rowIndex: i,
+      isLocalOrder,
+      syncedToSheet
     });
   }
 

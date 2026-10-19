@@ -21,6 +21,8 @@ export interface SaleTransaction {
   ganancia: number;
   deudaInfo?: string;
   rowIndex: number;
+  isLocalOrder?: boolean;
+  syncedToSheet?: boolean;
 }
 
 export interface CatalogProduct {
@@ -232,3 +234,53 @@ export interface YerbazoDataset {
   webStore?: WebStoreData;
   lastWebSyncTime?: string;
 }
+
+export interface NewOrderItemInput {
+  producto: string;
+  cantidad: number;
+  precioVentaUnitario: number;
+  precioCompraUnitario: number;
+  stockRestanteAntes: number;
+}
+
+export interface NewOrderPayload {
+  id: string;
+  cliente: string;
+  esClienteNuevo?: boolean;
+  comoNosConocio?: string;
+  direccionEntrega?: string;
+  fecha: string; // DD/MM/YYYY
+  precioSistema: number;
+  precioFinal: number;
+  medioPago: string;
+  pago: 'SI' | 'NO';
+  entregado: 'SI' | 'NO';
+  observaciones: string;
+  items: NewOrderItemInput[];
+  mes: string;
+  semana: string;
+  ganancia: number;
+  createdAt?: string;
+  syncedToSheet?: boolean;
+}
+
+export interface OrderStatusOverride {
+  id: string;
+  rowIndex?: number;
+  cliente?: string;
+  fecha?: string;
+  precioSistema?: number;
+  precioFinal?: number;
+  medioPago?: string;
+  pago?: 'SI' | 'NO';
+  entregado?: 'SI' | 'NO';
+  observaciones?: string;
+  items?: NewOrderItemInput[];
+  mes?: string;
+  semana?: string;
+  ganancia?: number;
+  updatedAt: string;
+  syncedToSheet?: boolean;
+}
+
+
