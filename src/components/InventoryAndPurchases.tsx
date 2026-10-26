@@ -42,6 +42,8 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   const [targetCoverageDays, setTargetCoverageDays] = useState<number>(30); // 30 days coverage target
   const [copiedOrder, setCopiedOrder] = useState<boolean>(false);
   const [purchaseFilter, setPurchaseFilter] = useState<'ALL' | 'ONLY_BUY' | 'CRITICAL'>('ALL');
+  const [mateSearch, setMateSearch] = useState('');
+  const [mateCategoryFilter, setMateCategoryFilter] = useState<'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'Mate' | 'Bombilla' | 'Canasta'>('ALL');
 
   // Manual purchase quantities state: { [productName]: quantity }
   const [manualPurchases, setManualPurchases] = useState<Record<string, number>>(() => {
@@ -82,6 +84,20 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   const matesStockSaleValuation = dataset.matesBombillas.reduce((acc, m) => acc + (m.valorVenta !== undefined ? m.valorVenta : m.total), 0);
   const matesStockCostValuation = dataset.matesBombillas.reduce((acc, m) => acc + (m.valorCosto !== undefined ? m.valorCosto : (m.cantidad * m.precioCompra)), 0);
   const matesStockValuation = matesStockSaleValuation;
+
+  // Filtered Mates & Bombillas list
+  const filteredMates = useMemo(() => {
+    return dataset.matesBombillas.filter(mate => {
+      const matchSearch = mate.producto.toLowerCase().includes(mateSearch.toLowerCase());
+      const restantes = mate.restantes !== undefined ? mate.restantes : mate.cantidad;
+      if (mateCategoryFilter === 'IN_STOCK') return matchSearch && restantes > 0;
+      if (mateCategoryFilter === 'OUT_OF_STOCK') return matchSearch && restantes <= 0;
+      if (mateCategoryFilter === 'Mate' || mateCategoryFilter === 'Bombilla' || mateCategoryFilter === 'Canasta') {
+        return matchSearch && mate.categoria === mateCategoryFilter;
+      }
+      return matchSearch;
+    });
+  }, [dataset.matesBombillas, mateSearch, mateCategoryFilter]);
 
   // Unified items list for Próxima Compra planning
   // We merge dataset.stock and dataset.proxCompra
@@ -844,22 +860,25 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
 
       </div>
 
-      {/* Mates y Bombillas (Accessories tab) */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+      {/* Mates y Bombillas (Accessories tab) - Formato Tabla interactiva idéntica a "el de arriba" */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200 space-y-6">
+        
+        {/* Header & Controls Toolbar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-stone-100">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-lg sm:text-xl">🧉</span>
-              <h3 className="text-base sm:text-xl font-black text-stone-900 font-display">
+              <span className="text-xl">🧉</span>
+              <h3 className="text-xl font-black text-stone-900 font-display">
                 Mates & Bombillas Artesanales
               </h3>
             </div>
-            <p className="hidden sm:block text-xs text-stone-500 mt-1">
-              Integrado con la pestaña "Stock myb": stock disponible, modelos, precios de venta y valuación
+            <p className="text-xs text-stone-500 mt-1">
+              Inventario físico en vivo integrado con la pestaña <strong>"Stock myb"</strong>: stock disponible, costos y precios de venta.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Quick Badges / Summary */}
+          <div className="flex flex-wrap items-center gap-2">
             <div className="text-xs font-bold text-stone-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
               Valuación Venta: <strong className="text-[#0f4b25]">${matesStockSaleValuation.toLocaleString('es-AR')}</strong> ({matesStockUnits} u.)
             </div>
@@ -872,8 +891,49 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {dataset.matesBombillas.map((mate) => {
+        {/* Filters Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          {/* Category filter pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-bold text-stone-400 mr-1">Filtrar:</span>
+            {[
+              { id: 'ALL', label: `Todos (${dataset.matesBombillas.length})` },
+              { id: 'IN_STOCK', label: `Con Stock (${dataset.matesBombillas.filter(m => (m.restantes !== undefined ? m.restantes : m.cantidad) > 0).length})` },
+              { id: 'OUT_OF_STOCK', label: `Sin Stock (${dataset.matesBombillas.filter(m => (m.restantes !== undefined ? m.restantes : m.cantidad) <= 0).length})` },
+              { id: 'Mate', label: `Mates (${dataset.matesBombillas.filter(m => m.categoria === 'Mate').length})` },
+              { id: 'Bombilla', label: `Bombillas (${dataset.matesBombillas.filter(m => m.categoria === 'Bombilla').length})` },
+              { id: 'Canasta', label: `Canastas (${dataset.matesBombillas.filter(m => m.categoria === 'Canasta').length})` },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setMateCategoryFilter(tab.id as any)}
+                className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer ${
+                  mateCategoryFilter === tab.id
+                    ? 'bg-[#0f4b25] text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Input */}
+          <div className="relative min-w-[200px]">
+            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar mate, bombilla..."
+              value={mateSearch}
+              onChange={(e) => setMateSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#0f4b25] transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Mobile View (md:hidden): Touch-friendly cards */}
+        <div className="md:hidden space-y-2.5">
+          {filteredMates.map((mate) => {
             const restantes = mate.restantes !== undefined ? mate.restantes : mate.cantidad;
             const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
             const precioCompra = mate.precioCompra || 0;
@@ -881,55 +941,191 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
             const isOutOfStock = restantes <= 0;
 
             return (
-              <div 
-                key={mate.producto} 
-                className={`p-3.5 sm:p-4 rounded-2xl border transition-shadow flex flex-col justify-between ${
-                  isOutOfStock ? 'bg-stone-50 border-stone-200 opacity-60' : 'bg-[#fcfbf7] border-stone-200 hover:shadow-md'
+              <div
+                key={mate.producto}
+                className={`p-3.5 rounded-2xl border space-y-2.5 ${
+                  isOutOfStock ? 'bg-stone-50/80 border-stone-200 opacity-60' : 'bg-stone-50/70 border-stone-200'
                 }`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                    <span className="text-[10px] font-bold uppercase text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
-                      {mate.categoria || 'Artesanal'}
-                    </span>
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-md ${
-                      isOutOfStock ? 'bg-stone-200 text-stone-600' : 'bg-emerald-50 text-[#0f4b25]'
-                    }`}>
-                      {isOutOfStock ? 'Sin stock' : `${restantes} u. disponibles`}
-                    </span>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-black text-stone-900 text-sm truncate">
+                      {mate.producto}
+                    </div>
+                    <div className="text-[11px] text-stone-500 flex items-center flex-wrap gap-1.5 mt-0.5">
+                      <span className="font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded text-[10px]">
+                        {mate.categoria || 'Artesanal'}
+                      </span>
+                      <span>•</span>
+                      <span>{mate.comprado || 0} comp. / {mate.vendidas || 0} vend.</span>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-black text-stone-900 mb-1">
-                    {mate.producto}
-                  </h4>
-                  <div className="text-[11px] text-stone-500 mb-2.5">
-                    {mate.comprado ? `${mate.comprado} comprados • ${mate.vendidas} vendidos` : (mate.detalle || '')}
-                  </div>
+                  <span className={`font-black text-xs px-2 py-0.5 rounded-lg shrink-0 ${
+                    isOutOfStock ? 'bg-stone-200 text-stone-600' : 'bg-emerald-100 text-[#0f4b25]'
+                  }`}>
+                    {isOutOfStock ? 'Sin stock' : `${restantes} u. rest.`}
+                  </span>
                 </div>
 
-                <div className="pt-2.5 sm:pt-3 border-t border-stone-200/70 space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-stone-500 text-[11px]">Precio de Venta:</span>
-                    <span className="font-black text-[#0f4b25] text-sm">${precioVenta.toLocaleString('es-AR')}</span>
+                <div className="grid grid-cols-3 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-stone-200">
+                  <div>
+                    <span className="text-stone-400 block text-[10px]">Precio Venta</span>
+                    <span className="font-black text-[#0f4b25] text-xs">${precioVenta.toLocaleString('es-AR')}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-stone-400">Costo Unitario:</span>
-                    <span className="font-bold text-stone-600">${precioCompra.toLocaleString('es-AR')}</span>
+                  <div>
+                    <span className="text-stone-400 block text-[10px]">Costo</span>
+                    <span className="font-bold text-stone-700">${precioCompra.toLocaleString('es-AR')}</span>
                   </div>
-                  {ganancia > 0 && (
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-stone-400">Margen por unidad:</span>
-                      <span className="font-extrabold text-[#e68628]">+${ganancia.toLocaleString('es-AR')} ({mate.porcentajeGanancia > 0 ? mate.porcentajeGanancia.toFixed(0) : '0'}%)</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between pt-1 border-t border-dashed border-stone-200 text-[11px]">
-                    <span className="text-stone-500 font-bold">Valuación en Stock:</span>
-                    <span className="font-black text-stone-800">${(restantes * precioVenta).toLocaleString('es-AR')}</span>
+                  <div className="text-right">
+                    <span className="text-stone-400 block text-[10px]">Valuación Stock</span>
+                    <span className="font-black text-stone-900">${(restantes * precioVenta).toLocaleString('es-AR')}</span>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+
+        {/* Desktop View (hidden md:block): TABLA IDÉNTICA A LA SUPERIOR */}
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
+              <tr>
+                <th className="py-3.5 px-3.5">Modelo / Producto</th>
+                <th className="py-3.5 px-3.5 text-center">Stock Actual</th>
+                <th className="py-3.5 px-3.5 text-center bg-stone-100">Comprado / Vendido</th>
+                <th className="py-3.5 px-3.5 text-right">Costo Unitario</th>
+                <th className="py-3.5 px-3.5 text-right font-black bg-emerald-100/60 text-[#0f4b25]">
+                  Precio de Venta
+                </th>
+                <th className="py-3.5 px-3.5 text-right font-bold text-[#e68628]">
+                  Margen por Unidad
+                </th>
+                <th className="py-3.5 px-3.5 text-right font-black">
+                  Valuación en Stock
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-200">
+              {filteredMates.map((mate) => {
+                const restantes = mate.restantes !== undefined ? mate.restantes : mate.cantidad;
+                const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
+                const precioCompra = mate.precioCompra || 0;
+                const ganancia = mate.gananciaUnidad || Math.max(0, precioVenta - precioCompra);
+                const isOutOfStock = restantes <= 0;
+                const valorStock = restantes * precioVenta;
+
+                return (
+                  <tr 
+                    key={mate.producto} 
+                    className={`transition-colors ${
+                      isOutOfStock ? 'bg-stone-50/70 opacity-60' : 'hover:bg-[#fbf9f4]'
+                    }`}
+                  >
+                    {/* Modelo / Producto */}
+                    <td className="py-3 px-3.5">
+                      <div className="font-extrabold text-stone-900 text-sm">
+                        {mate.producto}
+                      </div>
+                      <div className="text-[11px] text-stone-500 flex items-center space-x-2 mt-0.5">
+                        <span className="font-semibold text-amber-800 bg-amber-100/70 px-1.5 py-0.5 rounded text-[10px] uppercase">
+                          {mate.categoria || 'Artesanal'}
+                        </span>
+                        <span>•</span>
+                        <span>Línea artesanal Yerbazo</span>
+                      </div>
+                    </td>
+
+                    {/* Stock Actual */}
+                    <td className="py-3 px-3.5 text-center">
+                      <span className={`font-black text-xs px-2.5 py-1 rounded-xl inline-flex items-center space-x-1 ${
+                        isOutOfStock 
+                          ? 'bg-stone-200 text-stone-600' 
+                          : restantes <= 1 
+                          ? 'bg-amber-100 text-amber-900' 
+                          : 'bg-emerald-100 text-[#0f4b25]'
+                      }`}>
+                        <span>{isOutOfStock ? 'Sin stock' : `${restantes} u.`}</span>
+                      </span>
+                    </td>
+
+                    {/* Comprado / Vendido */}
+                    <td className="py-3 px-3.5 text-center bg-stone-50/50">
+                      <div className="font-bold text-stone-800">
+                        {mate.comprado || 0} <span className="font-normal text-stone-400">comp.</span>
+                      </div>
+                      <div className="text-[10px] text-stone-500">
+                        {mate.vendidas || 0} vendidas
+                      </div>
+                    </td>
+
+                    {/* Costo Unitario */}
+                    <td className="py-3 px-3.5 text-right font-semibold text-stone-600">
+                      ${precioCompra.toLocaleString('es-AR')}
+                    </td>
+
+                    {/* Precio de Venta */}
+                    <td className="py-3 px-3.5 text-right bg-emerald-50/50 font-black text-sm text-[#0f4b25]">
+                      ${precioVenta.toLocaleString('es-AR')}
+                    </td>
+
+                    {/* Margen por Unidad */}
+                    <td className="py-3 px-3.5 text-right">
+                      <div className="font-black text-xs text-[#e68628]">
+                        +${ganancia.toLocaleString('es-AR')}
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-semibold">
+                        {mate.porcentajeGanancia > 0 ? `+${mate.porcentajeGanancia.toFixed(1)}%` : '-'}
+                      </div>
+                    </td>
+
+                    {/* Valuación en Stock */}
+                    <td className="py-3 px-3.5 text-right font-black text-sm text-stone-900">
+                      ${valorStock.toLocaleString('es-AR')}
+                    </td>
+
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Resumen Total Footer Bar (idéntico a la barra resumen superior) */}
+        <div className="bg-[#f7f5ed] p-4 sm:p-5 rounded-2xl border-2 border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h4 className="font-black text-sm text-stone-900 uppercase tracking-wider font-display">
+              Resumen Total de Mates & Bombillas en Stock
+            </h4>
+            <p className="text-xs text-stone-600">
+              Total de <strong>{matesStockUnits} unidades físicas</strong> distribuidas en <strong>{dataset.matesBombillas.filter(m => (m.restantes !== undefined ? m.restantes : m.cantidad) > 0).length} modelos</strong> disponibles.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 text-right">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-stone-400 block">Costo Total Invertido</span>
+              <span className="text-xl sm:text-2xl font-black text-stone-700 font-display">
+                ${matesStockCostValuation.toLocaleString('es-AR')}
+              </span>
+            </div>
+
+            <div className="border-l border-stone-300 pl-4">
+              <span className="text-[10px] uppercase font-bold text-stone-400 block">Valuación en Venta</span>
+              <span className="text-xl sm:text-2xl font-black text-[#0f4b25] font-display">
+                ${matesStockSaleValuation.toLocaleString('es-AR')}
+              </span>
+            </div>
+
+            <div className="border-l border-stone-300 pl-4">
+              <span className="text-[10px] uppercase font-bold text-stone-400 block">Ganancia Proyectada</span>
+              <span className="text-xl sm:text-2xl font-black text-[#e68628] font-display">
+                +${(matesStockSaleValuation - matesStockCostValuation).toLocaleString('es-AR')}
+              </span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* Detailed Stock Inventory Table */}

@@ -1,4 +1,4 @@
-import { YerbazoDataset, WebStoreData, NewOrderPayload, OrderStatusOverride } from '../types';
+import { YerbazoDataset, WebStoreData, NewOrderPayload, OrderStatusOverride, SaleTransaction } from '../types';
 import { parseRawDataset, normalizeClientName, normalizeProductName } from '../utils/dataParser';
 import { RAW_SNAPSHOT_DATA } from '../data/initialData';
 import * as XLSX from 'xlsx';
@@ -533,6 +533,16 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
 
   for (const [id, ov] of Object.entries(statusOverrides)) {
     const ageMs = now - new Date(ov.updatedAt || 0).getTime();
+    if (ov.deleted) {
+      // Keep deleted tombstone until the row is absent from live Google Sheets (or if synced and >15s passed)
+      const stillInLiveSheet = sheetOrderIds.has(id.trim().toLowerCase());
+      if (isFromLiveSheet && !stillInLiveSheet && ageMs > 15000) {
+        overridesChanged = true;
+        continue;
+      }
+      remainingOverrides[id] = ov;
+      continue;
+    }
     if (isFromLiveSheet && ov.syncedToSheet && ageMs > 15000) {
       overridesChanged = true;
       continue;
@@ -551,6 +561,32 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
     const rowId = String(r[1] || `YB-${i}`).trim();
     const override = remainingOverrides[rowId];
     if (override) {
+      if (override.deleted) {
+        // Restore stock for the deleted row's items before clearing the row
+        for (let slot = 0; slot < 5; slot++) {
+          const baseIdx = 9 + slot * 3;
+          const prodName = String(r[baseIdx] || '').trim();
+          const qty = parseInt(String(r[baseIdx + 2] || '0'), 10) || 0;
+          if (prodName && qty > 0) {
+            const itemNorm = normalizeProductName(prodName);
+            const stockRow = rawData.stock.rows.find(
+              (sr: string[], idx: number) => idx > 0 && normalizeProductName(sr?.[0] || '') === itemNorm
+            );
+            if (stockRow) {
+              const prevVendidas = parseInt(stockRow[2] || '0', 10) || 0;
+              const prevRestantes = parseInt(stockRow[3] || '0', 10) || 0;
+              stockRow[2] = String(Math.max(0, prevVendidas - qty));
+              stockRow[3] = String(prevRestantes + qty);
+            }
+          }
+        }
+        // Clear row cells so parseRawDataset skips this deleted order
+        for (let col = 0; col < r.length; col++) {
+          r[col] = '';
+        }
+        continue;
+      }
+
       if (override.cliente !== undefined) r[0] = override.cliente;
       if (override.fecha !== undefined) r[2] = override.fecha;
       if (override.precioSistema !== undefined) r[3] = formatArsForSheet(override.precioSistema);
@@ -807,6 +843,87 @@ export function deleteLocalOrder(saleId: string, currentWebStore?: WebStoreData)
   return dataset;
 }
 
+export async function deleteOrderAndSync(
+  sale: SaleTransaction,
+  currentWebStore?: WebStoreData
+): Promise<{ dataset: YerbazoDataset; syncedToCloud: boolean; cloudMessage: string }> {
+  const saleId = sale.id;
+
+  // 1. Remove from localOrders if it was created locally
+  const localOrders = getLocalOrders().filter(o => o.id !== saleId);
+  saveLocalOrdersList(localOrders);
+
+  // 2. Mark as deleted in statusOverrides so local/cloud views hide it immediately and restore stock
+  const overrides = getStatusOverrides();
+  overrides[saleId] = {
+    id: saleId,
+    rowIndex: sale.rowIndex,
+    deleted: true,
+    updatedAt: new Date().toISOString(),
+    syncedToSheet: false
+  };
+  saveStatusOverridesMap(overrides);
+
+  pushCloudSyncState().catch(() => {});
+
+  // 3. Delete in Google Sheets "Ventas" tab via Apps Script
+  let cloudResult = await sendToGoogleAppsScript({
+    action: 'deleteOrder',
+    id: saleId,
+    rowIndex: sale.rowIndex
+  });
+
+  // Fallback: if the deployed Apps Script hasn't been updated with 'deleteOrder' yet,
+  // wipe the row using 'updateStatus' so it is immediately erased from "Ventas"
+  if (!cloudResult.ok && cloudResult.message.toLowerCase().includes('no reconocida')) {
+    cloudResult = await sendToGoogleAppsScript({
+      action: 'updateStatus',
+      id: saleId,
+      rowIndex: sale.rowIndex,
+      cliente: '',
+      fecha: '',
+      precioSistema: 0,
+      precioFinal: 0,
+      medioPago: '',
+      pago: '',
+      observaciones: '',
+      entregado: '',
+      mes: '',
+      semana: '',
+      ganancia: 0,
+      items: [
+        { producto: '', cantidad: 0, stockRestanteAntes: 0 },
+        { producto: '', cantidad: 0, stockRestanteAntes: 0 },
+        { producto: '', cantidad: 0, stockRestanteAntes: 0 },
+        { producto: '', cantidad: 0, stockRestanteAntes: 0 },
+        { producto: '', cantidad: 0, stockRestanteAntes: 0 }
+      ]
+    });
+  }
+
+  if (cloudResult.ok) {
+    const freshOverrides = getStatusOverrides();
+    if (freshOverrides[saleId]) {
+      freshOverrides[saleId].syncedToSheet = true;
+      saveStatusOverridesMap(freshOverrides);
+      pushCloudSyncState().catch(() => {});
+    }
+  }
+
+  // 4. Recompute dataset immediately
+  const baseRaw = getCurrentBaseRawData();
+  const mergedRaw = applyLocalChangesToRawData(baseRaw);
+  const dataset = parseRawDataset(mergedRaw);
+  dataset.webStore = currentWebStore || DEFAULT_WEB_STORE_DATA;
+  dataset.lastSyncTime = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return {
+    dataset,
+    syncedToCloud: cloudResult.ok,
+    cloudMessage: cloudResult.message
+  };
+}
+
 export async function syncPendingToGoogleSheets(): Promise<{ syncedOrders: number; syncedUpdates: number; message: string }> {
   await pullCloudSyncState();
   const scriptUrl = getAppsScriptUrl();
@@ -839,11 +956,11 @@ export async function syncPendingToGoogleSheets(): Promise<{ syncedOrders: numbe
   const overrides = getStatusOverrides();
   for (const [id, ov] of Object.entries(overrides)) {
     if (!ov.syncedToSheet) {
-      const res = await sendToGoogleAppsScript({
-        action: 'updateStatus',
-        ...ov,
-        id
-      });
+      const res = await sendToGoogleAppsScript(
+        ov.deleted
+          ? { action: 'deleteOrder', id, rowIndex: ov.rowIndex }
+          : { action: 'updateStatus', ...ov, id }
+      );
       if (res.ok) {
         ov.syncedToSheet = true;
         syncedUpdates++;
@@ -906,6 +1023,11 @@ function doPost(e) {
     if (payload.action === 'updateStatus' || payload.action === 'updateOrder') {
       var resStatus = actualizarFilaEnVentas(ss, payload);
       return jsonResponse(resStatus);
+    }
+
+    if (payload.action === 'deleteOrder') {
+      var resDel = eliminarFilaEnVentas(ss, payload);
+      return jsonResponse(resDel);
     }
 
     return jsonResponse({ ok: false, error: 'Acción no reconocida' });
@@ -1056,6 +1178,36 @@ function actualizarFilaEnVentas(ss, payload) {
   }
 
   return { ok: true, message: 'Fila ' + targetSheetRow + ' actualizada en la hoja Ventas' };
+}
+
+function eliminarFilaEnVentas(ss, payload) {
+  var ventasSheet = ss.getSheetByName('Ventas');
+  if (!ventasSheet) return { ok: false, error: 'No se encontró la pestaña Ventas' };
+
+  var data = ventasSheet.getDataRange().getValues();
+  var searchId = String(payload.id || '').trim().toLowerCase();
+  var targetSheetRow = -1;
+
+  for (var i = 1; i < data.length; i++) {
+    var colB = String(data[i][1] || '').trim().toLowerCase();
+    var fallbackId = ('yb-' + i).toLowerCase();
+    if ((colB !== '' && colB === searchId) || fallbackId === searchId) {
+      targetSheetRow = i + 1;
+      break;
+    }
+  }
+
+  if (targetSheetRow === -1 && payload.rowIndex && payload.rowIndex > 0 && payload.rowIndex < data.length) {
+    targetSheetRow = payload.rowIndex + 1;
+  }
+
+  if (targetSheetRow === -1) {
+    return { ok: false, error: 'No se encontró el pedido ' + payload.id + ' en la hoja Ventas' };
+  }
+
+  ventasSheet.deleteRow(targetSheetRow);
+  SpreadsheetApp.flush();
+  return { ok: true, message: 'Fila ' + targetSheetRow + ' eliminada de la hoja Ventas' };
 }
 
 function sincronizarDesdeNubeYerbazo() {

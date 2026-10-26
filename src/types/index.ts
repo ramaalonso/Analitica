@@ -278,6 +278,7 @@ export interface NewOrderPayload {
 export interface OrderStatusOverride {
   id: string;
   rowIndex?: number;
+  deleted?: boolean;
   cliente?: string;
   fecha?: string;
   precioSistema?: number;

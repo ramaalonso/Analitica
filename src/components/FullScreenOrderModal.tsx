@@ -16,7 +16,8 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -30,6 +31,7 @@ import {
 import {
   saveNewOrderAndSync,
   updateOrderStatusAndSync,
+  deleteOrderAndSync,
   generateOrderId,
   buildTabSeparatedRow,
   buildGoogleSheetNativeRowFromOrder,
@@ -138,6 +140,8 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
   const [productSearch, setProductSearch] = useState('');
   const [productCatFilter, setProductCatFilter] = useState<'TODOS' | '1 KG' | '500 G' | 'Accesorios'>('TODOS');
   const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeletingOrder, setIsDeletingOrder] = useState(false);
   const [lastCreatedOrder, setLastCreatedOrder] = useState<NewOrderPayload | null>(null);
   const [copiedLastOrderRow, setCopiedLastOrderRow] = useState(false);
   const [showSheetPreview, setShowSheetPreview] = useState(false);
@@ -159,6 +163,8 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
   // Populate form when opening in Edit Mode or New Mode
   useEffect(() => {
     if (!isOpen) return;
+    setConfirmingDelete(false);
+    setIsDeletingOrder(false);
 
     if (editingOrder) {
       setClientName(editingOrder.cliente || '');
@@ -532,6 +538,29 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
       triggerLocalToast('Ocurrió un error al guardar el pedido.', 'warning');
     } finally {
       setIsSavingOrder(false);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!editingOrder) return;
+    setIsDeletingOrder(true);
+    try {
+      const result = await deleteOrderAndSync(editingOrder, dataset.webStore);
+      onDatasetUpdate(result.dataset);
+
+      const delMsg = result.syncedToCloud
+        ? `🗑️ Pedido #${editingOrder.id} de ${editingOrder.cliente} eliminado de la app y de la hoja Ventas.`
+        : `🗑️ Pedido #${editingOrder.id} de ${editingOrder.cliente} eliminado (${result.cloudMessage}).`;
+
+      if (onOrderSavedToast) {
+        onOrderSavedToast(delMsg, result.syncedToCloud);
+      }
+      onClose();
+    } catch {
+      triggerLocalToast('Ocurrió un error al eliminar el pedido.', 'warning');
+    } finally {
+      setIsDeletingOrder(false);
+      setConfirmingDelete(false);
     }
   };
 
@@ -1409,6 +1438,48 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                 })()}
               </div>
 
+              {/* Delete Order Option inside Step 3 when modifying an existing order */}
+              {isEditMode && editingOrder && (
+                <div className="pt-2 border-t border-rose-200/80">
+                  {!confirmingDelete ? (
+                    <button
+                      type="button"
+                      disabled={isSavingOrder || isDeletingOrder}
+                      onClick={() => setConfirmingDelete(true)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Eliminar Pedido #{editingOrder.id}</span>
+                    </button>
+                  ) : (
+                    <div className="p-3 rounded-2xl bg-rose-50 border-2 border-rose-300 space-y-2.5">
+                      <p className="text-xs font-extrabold text-rose-900 text-center">
+                        ¿Seguro que querés eliminar el pedido #{editingOrder.id} de {editingOrder.cliente}?
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={isDeletingOrder}
+                          onClick={() => setConfirmingDelete(false)}
+                          className="py-2 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 text-xs font-extrabold cursor-pointer"
+                        >
+                          No, conservar
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isDeletingOrder}
+                          onClick={handleDeleteOrder}
+                          className="py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black flex items-center justify-center space-x-1 cursor-pointer shadow-xs"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{isDeletingOrder ? 'Eliminando...' : 'Sí, Eliminar'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           </div>
 
@@ -1451,30 +1522,67 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
           {/* Submit Buttons */}
           <div className="flex items-center gap-2">
             {isEditMode ? (
-              <>
-                <button
-                  type="button"
-                  disabled={isSavingOrder}
-                  onClick={onClose}
-                  className="px-3.5 sm:px-4 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-800 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shrink-0"
-                >
-                  Cancelar
-                </button>
+              confirmingDelete ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={isDeletingOrder}
+                    onClick={() => setConfirmingDelete(false)}
+                    className="px-3.5 sm:px-4 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-800 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shrink-0"
+                  >
+                    No, volver
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeletingOrder}
+                    onClick={handleDeleteOrder}
+                    className="flex-1 sm:flex-initial sm:min-w-[260px] py-3 px-5 rounded-2xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white font-black text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                    <span>
+                      {isDeletingOrder
+                        ? 'Eliminando pedido...'
+                        : `Confirmar Eliminar #${editingOrder?.id}`}
+                    </span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    disabled={isSavingOrder || isDeletingOrder}
+                    onClick={() => setConfirmingDelete(true)}
+                    className="px-3 sm:px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 disabled:opacity-50 font-extrabold text-xs flex items-center space-x-1.5 transition-all active:scale-95 cursor-pointer shrink-0"
+                    title="Eliminar este pedido de la app y de la hoja Ventas"
+                  >
+                    <Trash2 className="w-4 h-4 shrink-0" />
+                    <span>Eliminar Pedido</span>
+                  </button>
 
-                <button
-                  type="button"
-                  disabled={isSavingOrder}
-                  onClick={() => submitOrder(false)}
-                  className="flex-1 sm:flex-initial sm:min-w-[270px] py-3 px-5 rounded-2xl bg-[#0f4b25] hover:bg-[#145e2f] disabled:bg-stone-300 text-[#ece7d7] font-black text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
-                >
-                  <Save className="w-4 h-4 sm:w-5 sm:h-5 text-[#e68628] shrink-0" />
-                  <span>
-                    {isSavingOrder
-                      ? 'Guardando cambios en Ventas...'
-                      : `Guardar Cambios ($${finalPriceNumber.toLocaleString('es-AR')})`}
-                  </span>
-                </button>
-              </>
+                  <button
+                    type="button"
+                    disabled={isSavingOrder || isDeletingOrder}
+                    onClick={onClose}
+                    className="hidden sm:inline-flex px-3.5 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-800 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shrink-0"
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isSavingOrder || isDeletingOrder}
+                    onClick={() => submitOrder(false)}
+                    className="flex-1 sm:flex-initial sm:min-w-[250px] py-3 px-4 sm:px-5 rounded-2xl bg-[#0f4b25] hover:bg-[#145e2f] disabled:bg-stone-300 text-[#ece7d7] font-black text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4 sm:w-5 sm:h-5 text-[#e68628] shrink-0" />
+                    <span>
+                      {isSavingOrder
+                        ? 'Guardando cambios...'
+                        : `Guardar Cambios ($${finalPriceNumber.toLocaleString('es-AR')})`}
+                    </span>
+                  </button>
+                </>
+              )
             ) : (
               <>
                 <button
