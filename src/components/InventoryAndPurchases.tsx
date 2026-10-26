@@ -77,9 +77,11 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   const totalStockValuationSale = dataset.stock.reduce((acc, p) => acc + (p.restantes * p.precioVenta), 0);
   const projectedStockProfit = totalStockValuationSale - totalStockValuationCost;
 
-  // Mates valuation
-  const matesStockUnits = dataset.matesBombillas.reduce((acc, m) => acc + m.cantidad, 0);
-  const matesStockValuation = dataset.matesBombillas.reduce((acc, m) => acc + m.total, 0);
+  // Mates valuation (Stock myb)
+  const matesStockUnits = dataset.matesBombillas.reduce((acc, m) => acc + (m.restantes !== undefined ? m.restantes : m.cantidad), 0);
+  const matesStockSaleValuation = dataset.matesBombillas.reduce((acc, m) => acc + (m.valorVenta !== undefined ? m.valorVenta : m.total), 0);
+  const matesStockCostValuation = dataset.matesBombillas.reduce((acc, m) => acc + (m.valorCosto !== undefined ? m.valorCosto : (m.cantidad * m.precioCompra)), 0);
+  const matesStockValuation = matesStockSaleValuation;
 
   // Unified items list for Próxima Compra planning
   // We merge dataset.stock and dataset.proxCompra
@@ -853,47 +855,80 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
               </h3>
             </div>
             <p className="hidden sm:block text-xs text-stone-500 mt-1">
-              Integrado con la pestaña "mates - bombillas": stock disponible, modelos y valuación
+              Integrado con la pestaña "Stock myb": stock disponible, modelos, precios de venta y valuación
             </p>
           </div>
 
-          <div className="text-xs font-bold text-stone-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 self-start sm:self-auto">
-            Valuación: <strong className="text-[#0f4b25]">${matesStockValuation.toLocaleString('es-AR')}</strong> ({matesStockUnits} u.)
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <div className="text-xs font-bold text-stone-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+              Valuación Venta: <strong className="text-[#0f4b25]">${matesStockSaleValuation.toLocaleString('es-AR')}</strong> ({matesStockUnits} u.)
+            </div>
+            <div className="text-xs font-bold text-stone-600 bg-stone-100 px-3 py-1.5 rounded-xl border border-stone-200">
+              Costo: <strong className="text-stone-800">${matesStockCostValuation.toLocaleString('es-AR')}</strong>
+            </div>
+            <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+              Ganancia Proyectada: <strong className="text-emerald-700">+${(matesStockSaleValuation - matesStockCostValuation).toLocaleString('es-AR')}</strong>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {dataset.matesBombillas.map((mate) => (
-            <div key={mate.producto} className="p-3.5 sm:p-4 rounded-2xl bg-[#fcfbf7] border border-stone-200 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                  <span className="text-[10px] font-bold uppercase text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
-                    Artesanal
-                  </span>
-                  <span className="text-xs font-black text-[#0f4b25] bg-emerald-50 px-2 py-0.5 rounded-md">
-                    {mate.cantidad} u. disponibles
-                  </span>
-                </div>
-                <h4 className="text-sm font-black text-stone-900 mb-1">
-                  {mate.producto}
-                </h4>
-                {mate.detalle && (
-                  <p className="text-[11px] text-stone-500 mb-2 sm:mb-3">{mate.detalle}</p>
-                )}
-              </div>
+          {dataset.matesBombillas.map((mate) => {
+            const restantes = mate.restantes !== undefined ? mate.restantes : mate.cantidad;
+            const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
+            const precioCompra = mate.precioCompra || 0;
+            const ganancia = mate.gananciaUnidad || Math.max(0, precioVenta - precioCompra);
+            const isOutOfStock = restantes <= 0;
 
-              <div className="pt-2.5 sm:pt-3 border-t border-stone-200/70 flex items-center justify-between text-xs">
+            return (
+              <div 
+                key={mate.producto} 
+                className={`p-3.5 sm:p-4 rounded-2xl border transition-shadow flex flex-col justify-between ${
+                  isOutOfStock ? 'bg-stone-50 border-stone-200 opacity-60' : 'bg-[#fcfbf7] border-stone-200 hover:shadow-md'
+                }`}
+              >
                 <div>
-                  <span className="text-stone-400 block text-[10px]">Precio Unitario</span>
-                  <span className="font-extrabold text-stone-800">${mate.precioUnidad.toLocaleString('es-AR')}</span>
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span className="text-[10px] font-bold uppercase text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                      {mate.categoria || 'Artesanal'}
+                    </span>
+                    <span className={`text-xs font-black px-2 py-0.5 rounded-md ${
+                      isOutOfStock ? 'bg-stone-200 text-stone-600' : 'bg-emerald-50 text-[#0f4b25]'
+                    }`}>
+                      {isOutOfStock ? 'Sin stock' : `${restantes} u. disponibles`}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-black text-stone-900 mb-1">
+                    {mate.producto}
+                  </h4>
+                  <div className="text-[11px] text-stone-500 mb-2.5">
+                    {mate.comprado ? `${mate.comprado} comprados • ${mate.vendidas} vendidos` : (mate.detalle || '')}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-stone-400 block text-[10px]">Valor Total</span>
-                  <span className="font-black text-[#e68628]">${mate.total.toLocaleString('es-AR')}</span>
+
+                <div className="pt-2.5 sm:pt-3 border-t border-stone-200/70 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-500 text-[11px]">Precio de Venta:</span>
+                    <span className="font-black text-[#0f4b25] text-sm">${precioVenta.toLocaleString('es-AR')}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-stone-400">Costo Unitario:</span>
+                    <span className="font-bold text-stone-600">${precioCompra.toLocaleString('es-AR')}</span>
+                  </div>
+                  {ganancia > 0 && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-stone-400">Margen por unidad:</span>
+                      <span className="font-extrabold text-[#e68628]">+${ganancia.toLocaleString('es-AR')} ({mate.porcentajeGanancia > 0 ? mate.porcentajeGanancia.toFixed(0) : '0'}%)</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-1 border-t border-dashed border-stone-200 text-[11px]">
+                    <span className="text-stone-500 font-bold">Valuación en Stock:</span>
+                    <span className="font-black text-stone-800">${(restantes * precioVenta).toLocaleString('es-AR')}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
