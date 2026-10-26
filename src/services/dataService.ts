@@ -553,8 +553,8 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
     if (override) {
       if (override.cliente !== undefined) r[0] = override.cliente;
       if (override.fecha !== undefined) r[2] = override.fecha;
-      if (override.precioSistema !== undefined) r[3] = formatSheetCurrency(override.precioSistema);
-      if (override.precioFinal !== undefined) r[4] = formatSheetCurrency(override.precioFinal);
+      if (override.precioSistema !== undefined) r[3] = formatArsForSheet(override.precioSistema);
+      if (override.precioFinal !== undefined) r[4] = formatArsForSheet(override.precioFinal);
       if (override.medioPago !== undefined) r[5] = override.medioPago;
       if (override.pago !== undefined) r[6] = override.pago;
       if (override.observaciones !== undefined) r[7] = override.observaciones;
@@ -576,7 +576,7 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
       }
       if (override.mes !== undefined) r[24] = override.mes.toLowerCase();
       if (override.semana !== undefined) r[25] = override.semana;
-      if (override.ganancia !== undefined) r[26] = formatSheetCurrency(override.ganancia);
+      if (override.ganancia !== undefined) r[26] = formatArsForSheet(override.ganancia);
       r[31] = override.syncedToSheet ? 'SYNCED' : 'PENDING_SYNC';
     }
   }

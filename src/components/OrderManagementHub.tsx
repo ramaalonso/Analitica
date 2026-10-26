@@ -130,9 +130,8 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
   // Pull cloud sync state (Firebase Realtime DB) so orders loaded on phone appear on PC & vice versa
   useEffect(() => {
     let active = true;
-    pullCloudSyncState(dataset.webStore).then(updated => {
-      if (active && updated) {
-        onDatasetUpdate(updated);
+    pullCloudSyncState().then(() => {
+      if (active) {
         setScriptUrlInput(getAppsScriptUrl());
       }
     });
