@@ -216,8 +216,19 @@ export interface ClienteRecompra {
 export interface MateBombillaItem {
   producto: string;
   cantidad: number;
+  comprado: number;
+  vendidas: number;
+  restantes: number;
+  precioCompra: number;
+  precioVenta: number;
   precioUnidad: number;
   total: number;
+  valorVenta: number;
+  valorCosto: number;
+  gananciaUnidad: number;
+  gananciaTotal: number;
+  porcentajeGanancia: number;
+  categoria: 'Mate' | 'Bombilla' | 'Canasta' | 'Accesorio';
   detalle: string;
 }
 

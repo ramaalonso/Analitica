@@ -25,7 +25,7 @@ const TABS_CONFIG = [
   { id: 'ganancia', gid: '1837448515', name: 'Ganancia' },
   { id: 'prox_compra', gid: '100594293', name: 'Prox compra' },
   { id: 'clientes', gid: '766684196', name: 'Clientes' },
-  { id: 'mates_bombillas', gid: '816238572', name: 'mates - bombillas' },
+  { id: 'mates_bombillas', gid: '1990667304', name: 'Stock myb' },
   { id: 'hoja1', gid: '0', name: 'Hoja 1' }
 ];
 

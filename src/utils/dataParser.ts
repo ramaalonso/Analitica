@@ -499,23 +499,97 @@ export function parseRawDataset(raw = RAW_SNAPSHOT_DATA): YerbazoDataset {
     });
   }
 
-  // 6. Mates y bombillas
+  // 6. Mates y bombillas (Integrado con pestaña "Stock myb")
   const matesRows = raw.mates_bombillas?.rows || [];
   const matesBombillas: MateBombillaItem[] = [];
+  const headerRow = matesRows[0] || [];
+  const isStockMybFormat = headerRow.some((col: any) => {
+    const s = safeStr(col).toLowerCase();
+    return s.includes('restante') || s.includes('precio venta') || s.includes('comprado');
+  });
+
   for (let i = 1; i < matesRows.length; i++) {
     const r = matesRows[i];
-    if (!r || !safeStr(r[0]) || safeStr(r[0]).includes('Final')) continue;
-    const qty = parseInt(safeStr(r[1]) || '0', 10) || 0;
-    const precio = parseCurrency(r[2]);
-    const total = parseCurrency(r[3]);
-    const detalle = safeStr(r[4]);
-    matesBombillas.push({
-      producto: safeStr(r[0]),
-      cantidad: qty,
-      precioUnidad: precio,
-      total,
-      detalle
-    });
+    if (!r || !safeStr(r[0])) continue;
+    const prodName = safeStr(r[0]);
+    if (prodName.toLowerCase().includes('final') || prodName.toLowerCase().includes('total +')) continue;
+
+    let categoria: 'Mate' | 'Bombilla' | 'Canasta' | 'Accesorio' = 'Mate';
+    const lowerName = prodName.toLowerCase();
+    if (lowerName.includes('bombill')) {
+      categoria = 'Bombilla';
+    } else if (lowerName.includes('canasta')) {
+      categoria = 'Canasta';
+    } else if (lowerName.includes('torpedo') || lowerName.includes('imperial') || lowerName.includes('ranchero') || lowerName.includes('mate')) {
+      categoria = 'Mate';
+    } else {
+      categoria = 'Accesorio';
+    }
+
+    if (isStockMybFormat) {
+      const comprado = parseInt(safeStr(r[1]) || '0', 10) || 0;
+      const vendidas = parseInt(safeStr(r[2]) || '0', 10) || 0;
+      const restantes = parseInt(safeStr(r[3]) || '0', 10) || 0;
+      const precioCompra = parseCurrency(r[4]);
+      const precioVenta = parseCurrency(r[5]);
+      const gastoTotal = parseCurrency(r[6]) || (comprado * precioCompra);
+      const gananciaTotal = parseCurrency(r[7]) || (restantes * Math.max(0, precioVenta - precioCompra));
+      const gananciaUnidad = parseCurrency(r[8]) || Math.max(0, precioVenta - precioCompra);
+      
+      let pct = 0;
+      if (r[10]) {
+        pct = parseFloat(safeStr(r[10]).replace('%', '').replace(',', '.')) || 0;
+      }
+      if (!pct && precioCompra > 0) {
+        pct = ((precioVenta - precioCompra) / precioCompra) * 100;
+      }
+
+      const valorVenta = restantes * precioVenta;
+      const valorCosto = restantes * precioCompra;
+
+      matesBombillas.push({
+        producto: prodName,
+        cantidad: restantes,
+        comprado,
+        vendidas,
+        restantes,
+        precioCompra,
+        precioVenta,
+        precioUnidad: precioVenta, // Sale price
+        total: valorVenta, // Commercial stock valuation
+        valorVenta,
+        valorCosto,
+        gananciaUnidad,
+        gananciaTotal,
+        porcentajeGanancia: parseFloat(pct.toFixed(1)),
+        categoria,
+        detalle: `${comprado} comprados • ${vendidas} vendidos`
+      });
+    } else {
+      // Fallback parser for legacy sheets
+      const qty = parseInt(safeStr(r[1]) || '0', 10) || 0;
+      const precio = parseCurrency(r[2]);
+      const total = parseCurrency(r[3]) || (qty * precio);
+      const detalle = safeStr(r[4]);
+      matesBombillas.push({
+        producto: prodName,
+        cantidad: qty,
+        comprado: qty,
+        vendidas: 0,
+        restantes: qty,
+        precioCompra: precio,
+        precioVenta: precio,
+        precioUnidad: precio,
+        total,
+        valorVenta: total,
+        valorCosto: total,
+        gananciaUnidad: 0,
+        gananciaTotal: 0,
+        porcentajeGanancia: 0,
+        categoria,
+        detalle
+      });
+    }
   }
 
   return {

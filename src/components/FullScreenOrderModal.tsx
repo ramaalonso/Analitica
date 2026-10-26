@@ -15,11 +15,13 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
-  AlertCircle
+  AlertCircle,
+  Save
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
   YerbazoDataset,
+  SaleTransaction,
   CatalogProduct,
   ClienteRow,
   NewOrderPayload,
@@ -27,6 +29,7 @@ import {
 } from '../types';
 import {
   saveNewOrderAndSync,
+  updateOrderStatusAndSync,
   generateOrderId,
   buildTabSeparatedRow,
   buildGoogleSheetNativeRowFromOrder,
@@ -70,11 +73,29 @@ function computeMonthAndWeekFromDate(isoDateStr: string): { displayDate: string;
   };
 }
 
+function parseDisplayDateToIso(fechaStr: string | undefined, fallbackIso: string): string {
+  if (!fechaStr) return fallbackIso;
+  const trimmed = fechaStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const parts = trimmed.split('/');
+  if (parts.length === 3) {
+    const day = String(parseInt(parts[0], 10) || 1).padStart(2, '0');
+    const month = String(parseInt(parts[1], 10) || 1).padStart(2, '0');
+    let year = parts[2].trim();
+    if (year.length === 2) year = `20${year}`;
+    if (year.length === 4) {
+      return `${year}-${month}-${day}`;
+    }
+  }
+  return fallbackIso;
+}
+
 interface FullScreenOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   dataset: YerbazoDataset;
   onDatasetUpdate: (newDataset: YerbazoDataset) => void;
+  editingOrder?: SaleTransaction | null;
   onOrderSavedToast?: (message: string, isSuccess: boolean) => void;
 }
 
@@ -83,8 +104,11 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
   onClose,
   dataset,
   onDatasetUpdate,
+  editingOrder = null,
   onOrderSavedToast
 }) => {
+  const isEditMode = !!editingOrder;
+
   const step1Ref = useRef<HTMLDivElement>(null);
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
@@ -124,6 +148,82 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
     setTimeout(() => setLocalToast(null), 4000);
   };
 
+  const clientMap = useMemo(() => {
+    const map = new Map<string, ClienteRow>();
+    for (const c of dataset.clientes) {
+      map.set(c.cliente.toLowerCase().trim(), c);
+    }
+    return map;
+  }, [dataset.clientes]);
+
+  // Populate form when opening in Edit Mode or New Mode
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (editingOrder) {
+      setClientName(editingOrder.cliente || '');
+      const matchedClient = clientMap.get((editingOrder.cliente || '').toLowerCase().trim());
+      setClientAddress(matchedClient?.direccionEntrega || '');
+      setClientChannel(matchedClient?.comoNosConocio || 'Directo');
+      setIsNewClient(false);
+
+      setOrderDateIso(parseDisplayDateToIso(editingOrder.fecha, todayIso));
+
+      const mpRaw = (editingOrder.medioPago || '').trim();
+      if (mpRaw.toLowerCase().includes('efectivo')) {
+        setMedioPago('Efectivo');
+      } else if (mpRaw === '-----' || mpRaw.toLowerCase().includes('no especificado') || !mpRaw) {
+        setMedioPago('-----');
+      } else {
+        setMedioPago('Mercado Pago');
+      }
+
+      setPagoStatus((editingOrder.pago || '').toUpperCase() === 'SI' ? 'SI' : 'NO');
+      setEntregadoStatus((editingOrder.entregado || '').toUpperCase() === 'SI' ? 'SI' : 'NO');
+      setObservaciones(editingOrder.observaciones || '');
+
+      const totalQty = Math.max(1, editingOrder.items.reduce((a, b) => a + b.cantidad, 0));
+      const fallbackUnitPrice = Math.round((editingOrder.precioSistema || editingOrder.precioFinal) / totalQty);
+
+      const mappedItems: NewOrderItemInput[] = editingOrder.items.map(it => {
+        const cat = dataset.stock.find(
+          s => s.nombre.toLowerCase().trim() === it.producto.toLowerCase().trim()
+        );
+        return {
+          producto: cat ? cat.nombre : it.producto,
+          cantidad: it.cantidad,
+          precioVentaUnitario: cat ? cat.precioVenta : fallbackUnitPrice,
+          precioCompraUnitario: cat ? cat.precioCompra : 0,
+          stockRestanteAntes: cat
+            ? cat.restantes + it.cantidad
+            : (parseInt(it.stockStatus || '0', 10) || 0) + it.cantidad
+        };
+      });
+
+      setOrderItems(mappedItems);
+      setCustomFinalPrice(String(editingOrder.precioFinal));
+      setIsPriceManuallyEdited(true);
+      setProductSearch('');
+      setProductCatFilter('TODOS');
+      setLastCreatedOrder(null);
+    } else {
+      setClientName('');
+      setClientAddress('');
+      setClientChannel('Un amigo');
+      setIsNewClient(false);
+      setOrderDateIso(todayIso);
+      setMedioPago('Mercado Pago');
+      setPagoStatus('NO');
+      setEntregadoStatus('NO');
+      setObservaciones('');
+      setOrderItems([]);
+      setCustomFinalPrice('');
+      setIsPriceManuallyEdited(false);
+      setProductSearch('');
+      setProductCatFilter('TODOS');
+    }
+  }, [isOpen, editingOrder]);
+
   // Lock background scroll & handle Escape key while full-screen modal is open
   useEffect(() => {
     if (!isOpen) return;
@@ -142,14 +242,6 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, isSavingOrder, onClose]);
-
-  const clientMap = useMemo(() => {
-    const map = new Map<string, ClienteRow>();
-    for (const c of dataset.clientes) {
-      map.set(c.cliente.toLowerCase().trim(), c);
-    }
-    return map;
-  }, [dataset.clientes]);
 
   const selectedClientRecord = useMemo(() => {
     if (!clientName.trim()) return null;
@@ -224,12 +316,18 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
           ...updated[existingIdx],
           cantidad: updated[existingIdx].cantidad + 1
         };
+        setIsPriceManuallyEdited(false);
         return updated;
       }
       if (prev.length >= 5) {
         triggerLocalToast('El Excel de Yerbazo admite hasta 5 variedades distintas por fila de pedido.', 'warning');
         return prev;
       }
+      setIsPriceManuallyEdited(false);
+      // If this product was originally in editingOrder, include its original qty in stockRestanteAntes
+      const origItem = editingOrder?.items.find(
+        orig => orig.producto.toLowerCase().trim() === prod.nombre.toLowerCase().trim()
+      );
       return [
         ...prev,
         {
@@ -237,13 +335,14 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
           cantidad: 1,
           precioVentaUnitario: prod.precioVenta,
           precioCompraUnitario: prod.precioCompra,
-          stockRestanteAntes: prod.restantes
+          stockRestanteAntes: prod.restantes + (origItem ? origItem.cantidad : 0)
         }
       ];
     });
   };
 
   const handleUpdateItemQty = (productoName: string, delta: number) => {
+    setIsPriceManuallyEdited(false);
     setOrderItems(prev =>
       prev
         .map(it => {
@@ -278,6 +377,35 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
   };
 
   const handleResetForm = () => {
+    if (editingOrder) {
+      // Restore original values of the order being edited
+      setClientName(editingOrder.cliente || '');
+      setOrderDateIso(parseDisplayDateToIso(editingOrder.fecha, todayIso));
+      setPagoStatus((editingOrder.pago || '').toUpperCase() === 'SI' ? 'SI' : 'NO');
+      setEntregadoStatus((editingOrder.entregado || '').toUpperCase() === 'SI' ? 'SI' : 'NO');
+      setObservaciones(editingOrder.observaciones || '');
+      setCustomFinalPrice(String(editingOrder.precioFinal));
+      setIsPriceManuallyEdited(true);
+      const totalQty = Math.max(1, editingOrder.items.reduce((a, b) => a + b.cantidad, 0));
+      const fallbackUnitPrice = Math.round((editingOrder.precioSistema || editingOrder.precioFinal) / totalQty);
+      setOrderItems(
+        editingOrder.items.map(it => {
+          const cat = dataset.stock.find(
+            s => s.nombre.toLowerCase().trim() === it.producto.toLowerCase().trim()
+          );
+          return {
+            producto: cat ? cat.nombre : it.producto,
+            cantidad: it.cantidad,
+            precioVentaUnitario: cat ? cat.precioVenta : fallbackUnitPrice,
+            precioCompraUnitario: cat ? cat.precioCompra : 0,
+            stockRestanteAntes: cat ? cat.restantes + it.cantidad : (parseInt(it.stockStatus || '0', 10) || 0) + it.cantidad
+          };
+        })
+      );
+      triggerLocalToast('Se restauraron los datos originales del pedido.', 'info');
+      return;
+    }
+
     setClientName('');
     setClientAddress('');
     setObservaciones('');
@@ -306,6 +434,55 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
     setIsSavingOrder(true);
     try {
       const { displayDate, mes, semana } = computeMonthAndWeekFromDate(orderDateIso);
+      const effectiveMedioPago = pagoStatus === 'NO' && medioPago === '-----' ? '-----' : medioPago;
+
+      // =======================================================================
+      // EDIT EXISTING ORDER MODE
+      // =======================================================================
+      if (isEditMode && editingOrder) {
+        const result = await updateOrderStatusAndSync(
+          editingOrder.id,
+          {
+            rowIndex: editingOrder.rowIndex,
+            cliente: clientName.trim(),
+            fecha: displayDate,
+            precioSistema: calculatedSystemPrice,
+            precioFinal: finalPriceNumber,
+            medioPago: effectiveMedioPago,
+            pago: pagoStatus,
+            entregado: entregadoStatus,
+            observaciones: observaciones.trim(),
+            items: orderItems,
+            mes,
+            semana,
+            ganancia: calculatedProfit
+          },
+          dataset.webStore
+        );
+
+        onDatasetUpdate(result.dataset);
+
+        confetti({
+          particleCount: 65,
+          spread: 65,
+          origin: { y: 0.6 },
+          colors: ['#0f4b25', '#e68628', '#10b981']
+        });
+
+        const editMsg = result.syncedToCloud
+          ? `¡Pedido #${editingOrder.id} de ${clientName.trim()} ($${finalPriceNumber.toLocaleString('es-AR')}) modificado en la hoja Ventas!`
+          : `Pedido #${editingOrder.id} modificado en la app (${result.cloudMessage})`;
+
+        if (onOrderSavedToast) {
+          onOrderSavedToast(editMsg, result.syncedToCloud);
+        }
+        onClose();
+        return;
+      }
+
+      // =======================================================================
+      // CREATE NEW ORDER MODE
+      // =======================================================================
       const newOrder: NewOrderPayload = {
         id: generateOrderId(),
         cliente: clientName.trim(),
@@ -315,7 +492,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
         fecha: displayDate,
         precioSistema: calculatedSystemPrice,
         precioFinal: finalPriceNumber,
-        medioPago: pagoStatus === 'NO' && medioPago === '-----' ? '-----' : medioPago,
+        medioPago: effectiveMedioPago,
         pago: pagoStatus,
         entregado: entregadoStatus,
         observaciones: observaciones.trim(),
@@ -360,14 +537,16 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
 
   if (!isOpen) return null;
 
-  const nextSheetRowNumber = dataset.ventas.length + 2;
+  const targetSheetRowNumber = isEditMode && editingOrder
+    ? editingOrder.rowIndex + 1
+    : dataset.ventas.length + 2;
   const hasAnyInput = clientName.trim().length > 0 || orderItems.length > 0 || observaciones.trim().length > 0;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Pantalla completa para agregar nuevo pedido"
+      aria-label={isEditMode ? `Modificar pedido de ${editingOrder?.cliente}` : 'Pantalla completa para agregar nuevo pedido'}
       className="fixed inset-0 z-[100] w-screen h-[100dvh] bg-[#f7f5ed] flex flex-col overflow-hidden animate-in fade-in duration-150"
     >
       {/* Floating Toast inside Full-Screen Modal */}
@@ -408,14 +587,18 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
                 <h2 className="text-sm sm:text-lg font-black font-display tracking-tight text-white truncate">
-                  Nuevo Pedido Yerbazo
+                  {isEditMode
+                    ? `Modificar Pedido #${editingOrder?.id} (${editingOrder?.cliente})`
+                    : 'Nuevo Pedido Yerbazo'}
                 </h2>
                 <span className="hidden sm:inline-flex items-center space-x-1 bg-[#e68628] text-stone-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
-                  <span>Fila #{nextSheetRowNumber} en Ventas</span>
+                  <span>Fila #{targetSheetRowNumber} en Ventas</span>
                 </span>
               </div>
               <p className="text-[10px] sm:text-xs text-[#ece7d7]/75 truncate">
-                {getAppsScriptUrl()
+                {isEditMode
+                  ? `✏️ Editando Fila #${targetSheetRowNumber} en tiempo real • Cambiá cliente, productos, precio final o estado`
+                  : getAppsScriptUrl()
                   ? '🟢 Conectado en vivo con "Copia de Yerbazo.ba" (Hoja Ventas)'
                   : '⚡ Guardado en Nube + Sincronización con Google Sheets'}
               </p>
@@ -428,10 +611,10 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                 type="button"
                 onClick={handleResetForm}
                 className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-600/80 text-[#ece7d7] text-[11px] font-bold transition-colors cursor-pointer"
-                title="Limpiar selección actual"
+                title={isEditMode ? 'Restaurar valores originales del pedido' : 'Limpiar selección actual'}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Limpiar</span>
+                <span className="hidden sm:inline">{isEditMode ? 'Restaurar' : 'Limpiar'}</span>
               </button>
             )}
 
@@ -446,7 +629,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSavingOrder}
-              aria-label="Cerrar pantalla de nuevo pedido"
+              aria-label="Cerrar pantalla de pedido"
               className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#ece7d7] cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -506,8 +689,8 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
           {/* LEFT / MAIN PANEL: CLIENTE + CATÁLOGO COMPLETO (Scrollable on lg) */}
           <div className="lg:col-span-7 xl:col-span-8 lg:h-full lg:overflow-y-auto p-3 sm:p-5 lg:p-6 space-y-4 sm:space-y-5">
             
-            {/* Last Created Order Banner (when using "Guardar y Cargar Otro") */}
-            {lastCreatedOrder && (
+            {/* Last Created Order Banner (when using "Guardar + Otro") */}
+            {lastCreatedOrder && !isEditMode && (
               <div className="bg-emerald-950 text-[#ece7d7] rounded-2xl p-3.5 sm:p-4 border-2 border-emerald-400 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div className="min-w-0">
                   <div className="flex items-center space-x-2">
@@ -749,10 +932,12 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                   </span>
                   <div>
                     <h3 className="font-black text-sm sm:text-base text-stone-900 font-display">
-                      Seleccionar Productos ({orderItems.length}/5 variedades • {totalSelectedUnits} u.)
+                      {isEditMode
+                        ? `Agregar o Modificar Productos (${orderItems.length}/5 variedades • ${totalSelectedUnits} u.)`
+                        : `Seleccionar Productos (${orderItems.length}/5 variedades • ${totalSelectedUnits} u.)`}
                     </h3>
                     <p className="text-[11px] text-stone-500">
-                      Tocá cualquier producto para agregarlo o ajustar cantidades
+                      Tocá cualquier producto del catálogo para sumarlo o ajustar cantidades con - / +
                     </p>
                   </div>
                 </div>
@@ -801,7 +986,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
                 {filteredCatalog.map(prod => {
                   const inCart = orderItems.find(i => i.producto.toLowerCase() === prod.nombre.toLowerCase());
-                  const outOfStock = prod.restantes <= 0;
+                  const outOfStock = prod.restantes <= 0 && !inCart;
 
                   return (
                     <div
@@ -1150,7 +1335,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                 >
                   <span className="flex items-center space-x-1.5">
                     <FileSpreadsheet className="w-3.5 h-3.5 text-[#0f4b25]" />
-                    <span>Vista previa de la fila #{nextSheetRowNumber} en Ventas (27 cols)</span>
+                    <span>Vista previa de la fila #{targetSheetRowNumber} en Ventas (27 cols)</span>
                   </span>
                   {showSheetPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
@@ -1158,7 +1343,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                 {showSheetPreview && (() => {
                   const { displayDate, mes, semana } = computeMonthAndWeekFromDate(orderDateIso);
                   const previewOrder: NewOrderPayload = {
-                    id: 'YB-NUEVO',
+                    id: isEditMode && editingOrder ? editingOrder.id : 'YB-NUEVO',
                     cliente: clientName.trim() || '(Cliente)',
                     esClienteNuevo: isNewClient || !selectedClientRecord,
                     comoNosConocio: clientChannel || 'Directo',
@@ -1238,7 +1423,9 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
           {/* Live Order Summary */}
           <div className="flex items-center justify-between sm:justify-start sm:space-x-4 text-xs">
             <div className="truncate max-w-[180px] sm:max-w-xs">
-              <span className="text-stone-400 font-bold uppercase text-[10px] block">Cliente</span>
+              <span className="text-stone-400 font-bold uppercase text-[10px] block">
+                {isEditMode ? `Modificando #${editingOrder?.id}` : 'Cliente'}
+              </span>
               <span className="font-black text-stone-900 truncate block">
                 {clientName.trim() || 'Sin seleccionar'}
               </span>
@@ -1263,29 +1450,58 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
 
           {/* Submit Buttons */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={isSavingOrder}
-              onClick={() => submitOrder(true)}
-              className="px-3 sm:px-4 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-800 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shrink-0"
-              title="Guarda este pedido en Google Sheets y deja la pantalla abierta para cargar otro"
-            >
-              Guardar + Otro
-            </button>
+            {isEditMode ? (
+              <>
+                <button
+                  type="button"
+                  disabled={isSavingOrder}
+                  onClick={onClose}
+                  className="px-3.5 sm:px-4 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-800 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shrink-0"
+                >
+                  Cancelar
+                </button>
 
-            <button
-              type="button"
-              disabled={isSavingOrder}
-              onClick={() => submitOrder(false)}
-              className="flex-1 sm:flex-initial sm:min-w-[260px] py-3 px-5 rounded-2xl bg-[#0f4b25] hover:bg-[#145e2f] disabled:bg-stone-300 text-[#ece7d7] font-black text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#e68628] shrink-0" />
-              <span>
-                {isSavingOrder
-                  ? 'Guardando en Ventas...'
-                  : `Cargar Pedido ($${finalPriceNumber.toLocaleString('es-AR')})`}
-              </span>
-            </button>
+                <button
+                  type="button"
+                  disabled={isSavingOrder}
+                  onClick={() => submitOrder(false)}
+                  className="flex-1 sm:flex-initial sm:min-w-[270px] py-3 px-5 rounded-2xl bg-[#0f4b25] hover:bg-[#145e2f] disabled:bg-stone-300 text-[#ece7d7] font-black text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
+                >
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5 text-[#e68628] shrink-0" />
+                  <span>
+                    {isSavingOrder
+                      ? 'Guardando cambios en Ventas...'
+                      : `Guardar Cambios ($${finalPriceNumber.toLocaleString('es-AR')})`}
+                  </span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={isSavingOrder}
+                  onClick={() => submitOrder(true)}
+                  className="px-3 sm:px-4 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-800 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shrink-0"
+                  title="Guarda este pedido en Google Sheets y deja la pantalla abierta para cargar otro"
+                >
+                  Guardar + Otro
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSavingOrder}
+                  onClick={() => submitOrder(false)}
+                  className="flex-1 sm:flex-initial sm:min-w-[260px] py-3 px-5 rounded-2xl bg-[#0f4b25] hover:bg-[#145e2f] disabled:bg-stone-300 text-[#ece7d7] font-black text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#e68628] shrink-0" />
+                  <span>
+                    {isSavingOrder
+                      ? 'Guardando en Ventas...'
+                      : `Cargar Pedido ($${finalPriceNumber.toLocaleString('es-AR')})`}
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </footer>

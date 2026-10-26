@@ -20,7 +20,8 @@ import {
   Sparkles,
   Truck,
   RotateCcw,
-  Receipt
+  Receipt,
+  Pencil
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { SaleTransaction, YerbazoDataset } from '../types';
@@ -31,6 +32,7 @@ interface TransactionsExplorerProps {
   ventas: SaleTransaction[];
   selectedMonth: string;
   dataset?: YerbazoDataset;
+  onEditOrder?: (sale: SaleTransaction) => void;
 }
 
 export type DeliveryNodeId = 'ALL' | 'uade' | 'club' | 'mirador' | 'devoto' | 'otros';
@@ -112,7 +114,8 @@ export function detectDeliveryNode(v: SaleTransaction, clientAddress?: string): 
 export const TransactionsExplorer: React.FC<TransactionsExplorerProps> = ({
   ventas,
   selectedMonth,
-  dataset
+  dataset,
+  onEditOrder
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [monthFilter, setMonthFilter] = useState(selectedMonth || 'TODOS');
@@ -546,13 +549,24 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => setReceiptSale(v)}
-                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#0f4b25] text-[#ece7d7] font-bold text-[11px] cursor-pointer shrink-0"
-                  >
-                    <Receipt className="w-3 h-3 text-[#e68628]" />
-                    <span>Remito</span>
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {onEditOrder && (
+                      <button
+                        onClick={() => onEditOrder(v)}
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-[11px] border border-amber-300 cursor-pointer shrink-0 transition-colors"
+                      >
+                        <Pencil className="w-3 h-3 text-[#e68628]" />
+                        <span>Modificar</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setReceiptSale(v)}
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#0f4b25] text-[#ece7d7] font-bold text-[11px] cursor-pointer shrink-0"
+                    >
+                      <Receipt className="w-3 h-3 text-[#e68628]" />
+                      <span>Remito</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -572,7 +586,7 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
                 <th className="py-3 px-3.5">Ganancia</th>
                 <th className="py-3 px-3.5">Cobro</th>
                 <th className="py-3 px-3.5">Entrega</th>
-                <th className="py-3 px-3.5 text-right">Comprobante</th>
+                <th className="py-3 px-3.5 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200 bg-white">
@@ -656,16 +670,28 @@ ${sale.pago === 'NO' || sale.pago.includes('PENDIENTE') ? '⚠️ *Pago:* PENDIE
                       )}
                     </td>
 
-                    {/* Botón Remito / Ticket */}
+                    {/* Botones Modificar + Remito */}
                     <td className="py-3 px-3.5 text-right">
-                      <button
-                        onClick={() => setReceiptSale(v)}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-stone-100 hover:bg-[#0f4b25] hover:text-white text-stone-800 font-bold text-[11px] transition-all cursor-pointer shadow-2xs"
-                        title="Ver e imprimir comprobante / remito de entrega"
-                      >
-                        <Receipt className="w-3 h-3 text-[#e68628]" />
-                        <span>Remito</span>
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {onEditOrder && (
+                          <button
+                            onClick={() => onEditOrder(v)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-200 text-amber-950 font-black text-[11px] border border-amber-300 transition-all cursor-pointer shadow-2xs"
+                            title="Abrir pantalla completa para modificar este pedido"
+                          >
+                            <Pencil className="w-3 h-3 text-[#e68628]" />
+                            <span>Modificar</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setReceiptSale(v)}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-stone-100 hover:bg-[#0f4b25] hover:text-white text-stone-800 font-bold text-[11px] transition-all cursor-pointer shadow-2xs"
+                          title="Ver e imprimir comprobante / remito de entrega"
+                        >
+                          <Receipt className="w-3 h-3 text-[#e68628]" />
+                          <span>Remito</span>
+                        </button>
+                      </div>
                     </td>
 
                   </tr>

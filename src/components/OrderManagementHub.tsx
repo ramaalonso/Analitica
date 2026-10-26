@@ -75,6 +75,7 @@ interface OrderManagementHubProps {
   isSyncing: boolean;
   initialSubView?: 'entregas' | 'cobros' | 'nuevo' | 'recientes';
   onOpenNewOrder?: () => void;
+  onEditOrder?: (sale: SaleTransaction) => void;
 }
 
 const MONTH_NAMES_ES = [
@@ -115,7 +116,8 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
   onSyncSheets,
   isSyncing,
   initialSubView = 'entregas',
-  onOpenNewOrder
+  onOpenNewOrder,
+  onEditOrder
 }) => {
   const [subView, setSubView] = useState<'entregas' | 'cobros' | 'nuevo' | 'recientes'>(initialSubView);
   const [desktopSplitMode, setDesktopSplitMode] = useState<boolean>(false);
@@ -544,6 +546,10 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const openEditOrderModal = (sale: SaleTransaction) => {
+    if (onEditOrder) {
+      onEditOrder(sale);
+      return;
+    }
     setEditingOrder(sale);
     setEditCliente(sale.cliente);
     setEditFecha(sale.fecha);
@@ -898,9 +904,14 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="text-lg font-black text-[#0f4b25] font-mono">
-                        ${sale.precioFinal.toLocaleString('es-AR')}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openEditOrderModal(sale)}
+                        title="Tocá para abrir pantalla completa y modificar cualquier detalle"
+                        className="text-lg font-black text-[#0f4b25] hover:underline font-mono cursor-pointer"
+                      >
+                        ${sale.precioFinal.toLocaleString('es-AR')} ✏️
+                      </button>
                       <div className="text-[10px] text-stone-500 font-semibold">
                         {sale.medioPago}
                       </div>

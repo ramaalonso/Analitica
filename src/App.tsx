@@ -11,7 +11,7 @@ import {
   computeProductPerformances, 
   generateSmartCombos 
 } from './utils/analyticsEngine';
-import { YerbazoDataset, WebStoreData } from './types';
+import { YerbazoDataset, WebStoreData, SaleTransaction } from './types';
 import { Header } from './components/Header';
 import { DashboardOverview } from './components/DashboardOverview';
 import { ProductAnalysis } from './components/ProductAnalysis';
@@ -33,6 +33,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<string>('pedidos');
   const [ordersSubView, setOrdersSubView] = useState<'entregas' | 'cobros' | 'nuevo' | 'recientes'>('entregas');
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState<boolean>(false);
+  const [editingOrder, setEditingOrder] = useState<SaleTransaction | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('TODOS');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncNotification, setSyncNotification] = useState<string | null>(null);
@@ -239,7 +240,10 @@ export function App() {
         webStoreProductCount={dataset.webStore?.products?.length}
         pendingDeliveriesCount={pendingDeliveriesCount}
         unpaidOrdersCount={unpaidOrdersCount}
-        onQuickNewOrder={() => setIsNewOrderModalOpen(true)}
+        onQuickNewOrder={() => {
+          setEditingOrder(null);
+          setIsNewOrderModalOpen(true);
+        }}
         onExportExcel={handleExportFullExcel}
         onOpenReportModal={() => setIsReportOpen(true)}
       />
@@ -254,7 +258,14 @@ export function App() {
               onSyncSheets={handleSync}
               isSyncing={isSyncing}
               initialSubView={ordersSubView}
-              onOpenNewOrder={() => setIsNewOrderModalOpen(true)}
+              onOpenNewOrder={() => {
+                setEditingOrder(null);
+                setIsNewOrderModalOpen(true);
+              }}
+              onEditOrder={(sale) => {
+                setEditingOrder(sale);
+                setIsNewOrderModalOpen(true);
+              }}
             />
           )}
 
@@ -329,6 +340,10 @@ export function App() {
               ventas={dataset.ventas}
               selectedMonth={selectedMonth}
               dataset={dataset}
+              onEditOrder={(sale) => {
+                setEditingOrder(sale);
+                setIsNewOrderModalOpen(true);
+              }}
             />
           )}
         </ErrorBoundary>
@@ -386,7 +401,10 @@ export function App() {
 
           <button
             type="button"
-            onClick={() => setIsNewOrderModalOpen(true)}
+            onClick={() => {
+              setEditingOrder(null);
+              setIsNewOrderModalOpen(true);
+            }}
             className="flex flex-col items-center justify-center py-2 rounded-2xl bg-[#e68628] text-stone-950 font-black shadow-lg -mt-3 border-2 border-[#0f4b25] cursor-pointer"
           >
             <PlusCircle className="w-5 h-5" />
@@ -475,12 +493,16 @@ export function App() {
         selectedMonth={selectedMonth}
       />
 
-      {/* Full-Screen New Order Builder Modal */}
+      {/* Full-Screen New / Edit Order Builder Modal */}
       <FullScreenOrderModal
         isOpen={isNewOrderModalOpen}
-        onClose={() => setIsNewOrderModalOpen(false)}
+        onClose={() => {
+          setIsNewOrderModalOpen(false);
+          setEditingOrder(null);
+        }}
         dataset={dataset}
         onDatasetUpdate={setDataset}
+        editingOrder={editingOrder}
         onOrderSavedToast={(msg) => {
           setSyncNotification(msg);
           setTimeout(() => setSyncNotification(null), 4500);
