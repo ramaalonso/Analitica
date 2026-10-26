@@ -24,6 +24,7 @@ import { RepurchaseRadar } from './components/RepurchaseRadar';
 import { TransactionsExplorer } from './components/TransactionsExplorer';
 import { ExecutiveReportModal } from './components/ExecutiveReportModal';
 import { OrderManagementHub } from './components/OrderManagementHub';
+import { FullScreenOrderModal } from './components/FullScreenOrderModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CheckCircle2, AlertCircle, Truck, DollarSign, PlusCircle, BarChart3, Package } from 'lucide-react';
 
@@ -31,6 +32,7 @@ export function App() {
   const [dataset, setDataset] = useState<YerbazoDataset>(() => loadInitialDataset());
   const [activeTab, setActiveTab] = useState<string>('pedidos');
   const [ordersSubView, setOrdersSubView] = useState<'entregas' | 'cobros' | 'nuevo' | 'recientes'>('entregas');
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState<boolean>(false);
   const [selectedMonth, setSelectedMonth] = useState<string>('TODOS');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncNotification, setSyncNotification] = useState<string | null>(null);
@@ -237,11 +239,7 @@ export function App() {
         webStoreProductCount={dataset.webStore?.products?.length}
         pendingDeliveriesCount={pendingDeliveriesCount}
         unpaidOrdersCount={unpaidOrdersCount}
-        onQuickNewOrder={() => {
-          setOrdersSubView('nuevo');
-          setActiveTab('pedidos');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
+        onQuickNewOrder={() => setIsNewOrderModalOpen(true)}
         onExportExcel={handleExportFullExcel}
         onOpenReportModal={() => setIsReportOpen(true)}
       />
@@ -256,6 +254,7 @@ export function App() {
               onSyncSheets={handleSync}
               isSyncing={isSyncing}
               initialSubView={ordersSubView}
+              onOpenNewOrder={() => setIsNewOrderModalOpen(true)}
             />
           )}
 
@@ -387,11 +386,7 @@ export function App() {
 
           <button
             type="button"
-            onClick={() => {
-              setOrdersSubView('nuevo');
-              setActiveTab('pedidos');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={() => setIsNewOrderModalOpen(true)}
             className="flex flex-col items-center justify-center py-2 rounded-2xl bg-[#e68628] text-stone-950 font-black shadow-lg -mt-3 border-2 border-[#0f4b25] cursor-pointer"
           >
             <PlusCircle className="w-5 h-5" />
@@ -478,6 +473,18 @@ export function App() {
         monthlyMetrics={monthlyMetrics}
         performances={performances}
         selectedMonth={selectedMonth}
+      />
+
+      {/* Full-Screen New Order Builder Modal */}
+      <FullScreenOrderModal
+        isOpen={isNewOrderModalOpen}
+        onClose={() => setIsNewOrderModalOpen(false)}
+        dataset={dataset}
+        onDatasetUpdate={setDataset}
+        onOrderSavedToast={(msg) => {
+          setSyncNotification(msg);
+          setTimeout(() => setSyncNotification(null), 4500);
+        }}
       />
 
     </div>

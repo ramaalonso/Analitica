@@ -74,6 +74,7 @@ interface OrderManagementHubProps {
   onSyncSheets: () => void;
   isSyncing: boolean;
   initialSubView?: 'entregas' | 'cobros' | 'nuevo' | 'recientes';
+  onOpenNewOrder?: () => void;
 }
 
 const MONTH_NAMES_ES = [
@@ -113,7 +114,8 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
   onDatasetUpdate,
   onSyncSheets,
   isSyncing,
-  initialSubView = 'entregas'
+  initialSubView = 'entregas',
+  onOpenNewOrder
 }) => {
   const [subView, setSubView] = useState<'entregas' | 'cobros' | 'nuevo' | 'recientes'>(initialSubView);
   const [desktopSplitMode, setDesktopSplitMode] = useState<boolean>(false);
@@ -2298,17 +2300,21 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
             </div>
           </button>
 
-          {/* Card 3: Cargar Nuevo Pedido */}
+          {/* Card 3: Cargar Nuevo Pedido (Opens Full-Screen Order Builder) */}
           <button
             type="button"
             onClick={() => {
-              setDesktopSplitMode(false);
-              setSubView('nuevo');
+              if (onOpenNewOrder) {
+                onOpenNewOrder();
+              } else {
+                setDesktopSplitMode(false);
+                setSubView('nuevo');
+              }
             }}
             className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl text-left transition-all cursor-pointer border-2 flex flex-col justify-between ${
               subView === 'nuevo' && !desktopSplitMode
                 ? 'bg-[#e68628] text-stone-950 border-white shadow-md'
-                : 'bg-[#e68628]/90 text-stone-950 border-transparent hover:bg-[#e68628]'
+                : 'bg-[#e68628] text-stone-950 border-white/40 hover:brightness-105 shadow-xs'
             }`}
           >
             <div className="flex items-center justify-between w-full">
@@ -2319,7 +2325,7 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
             </div>
             <div className="mt-1 sm:mt-2 flex items-baseline justify-between">
               <span className="text-sm sm:text-lg font-black leading-tight">
-                Cargar Venta
+                Pantalla Completa
               </span>
               <span className="hidden sm:inline text-[11px] font-bold opacity-80">
                 Directo a Sheets
