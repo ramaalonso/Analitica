@@ -99,6 +99,130 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
     });
   }, [dataset.matesBombillas, mateSearch, mateCategoryFilter]);
 
+  // Manual purchase quantities for Mates & Bombillas (Stock myb): { [producto]: quantity }
+  const [manualMatePurchases, setManualMatePurchases] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem('yerbazo_manual_mate_purchases');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Could not read saved mate purchases', e);
+    }
+    return {};
+  });
+  const [copiedMateOrder, setCopiedMateOrder] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('yerbazo_manual_mate_purchases', JSON.stringify(manualMatePurchases));
+    } catch (e) {
+      console.warn('Could not save mate purchases', e);
+    }
+  }, [manualMatePurchases]);
+
+  // Interactive procurement rows for Mates & Bombillas (same model as "Stock yb" planner)
+  const mateProcurementItems = useMemo(() => {
+    return filteredMates.map(mate => {
+      const restantes = Math.max(0, mate.restantes !== undefined ? mate.restantes : mate.cantidad);
+      const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
+      const costoUnitario = mate.precioCompra || 0;
+      const vendidas = mate.vendidas || 0;
+      // Suggested restock: replenish models that are out of stock or about to run out,
+      // proportional to how much they have sold historically.
+      const smartRecommended = restantes === 0
+        ? Math.max(1, Math.min(vendidas, 3))
+        : restantes === 1 && vendidas > 0
+        ? Math.max(1, Math.min(Math.ceil(vendidas / 2), 2))
+        : 0;
+      const userQty = manualMatePurchases[mate.producto] || 0;
+      return {
+        producto: mate.producto,
+        categoria: mate.categoria || 'Artesanal',
+        comprado: mate.comprado || 0,
+        vendidas,
+        restantes,
+        costoUnitario,
+        precioVenta,
+        smartRecommended,
+        userQty,
+        totalPostCompra: restantes + userQty,
+        costoTotalCompra: userQty * costoUnitario,
+        gananciaProyectadaCompra: userQty * Math.max(0, precioVenta - costoUnitario),
+      };
+    });
+  }, [filteredMates, manualMatePurchases]);
+
+  // Totals are computed over ALL mates (not only the filtered view) so the order summary is complete
+  const allMateOrderItems = useMemo(() => {
+    return dataset.matesBombillas
+      .map(mate => {
+        const userQty = manualMatePurchases[mate.producto] || 0;
+        const costoUnitario = mate.precioCompra || 0;
+        const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
+        return {
+          producto: mate.producto,
+          userQty,
+          costoUnitario,
+          costoTotalCompra: userQty * costoUnitario,
+          gananciaProyectadaCompra: userQty * Math.max(0, precioVenta - costoUnitario),
+        };
+      })
+      .filter(i => i.userQty > 0);
+  }, [dataset.matesBombillas, manualMatePurchases]);
+
+  const totalMateUserUnits = allMateOrderItems.reduce((acc, i) => acc + i.userQty, 0);
+  const totalMateUserCost = allMateOrderItems.reduce((acc, i) => acc + i.costoTotalCompra, 0);
+  const totalMateUserProfit = allMateOrderItems.reduce((acc, i) => acc + i.gananciaProyectadaCompra, 0);
+
+  const handleMateQuantityChange = (productName: string, qty: number) => {
+    const val = Math.max(0, isNaN(qty) ? 0 : Math.round(qty));
+    setManualMatePurchases(prev => ({ ...prev, [productName]: val }));
+  };
+
+  const handleMateStepQuantity = (productName: string, delta: number) => {
+    const current = manualMatePurchases[productName] || 0;
+    handleMateQuantityChange(productName, current + delta);
+  };
+
+  const handleApplyMateRecommendations = () => {
+    const updated: Record<string, number> = {};
+    for (const mate of dataset.matesBombillas) {
+      const restantes = Math.max(0, mate.restantes !== undefined ? mate.restantes : mate.cantidad);
+      const vendidas = mate.vendidas || 0;
+      const rec = restantes === 0
+        ? Math.max(1, Math.min(vendidas, 3))
+        : restantes === 1 && vendidas > 0
+        ? Math.max(1, Math.min(Math.ceil(vendidas / 2), 2))
+        : 0;
+      updated[mate.producto] = rec;
+    }
+    setManualMatePurchases(updated);
+  };
+
+  const handleResetMateQuantities = () => {
+    setManualMatePurchases({});
+  };
+
+  const handleCopyMateOrderWhatsApp = () => {
+    if (allMateOrderItems.length === 0) {
+      alert('No has seleccionado cantidades de mates/bombillas a comprar aún.');
+      return;
+    }
+    const lines = [
+      '🧉 *ORDEN DE COMPRA MATES & BOMBILLAS - YERBAZO* 🧉',
+      `📅 Fecha: ${new Date().toLocaleDateString('es-AR')}`,
+      '----------------------------------------',
+      ...allMateOrderItems.map(i => `• *${i.userQty}x* ${i.producto} ($${i.costoUnitario.toLocaleString('es-AR')} c/u ➔ $${i.costoTotalCompra.toLocaleString('es-AR')})`),
+      '----------------------------------------',
+      `📦 *Total de Unidades:* ${totalMateUserUnits}`,
+      `💰 *Total Inversión Estimada:* $${totalMateUserCost.toLocaleString('es-AR')}`,
+      '',
+      '¡Por favor confirmar disponibilidad y fecha de entrega! Muchas gracias.'
+    ];
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopiedMateOrder(true);
+    setTimeout(() => setCopiedMateOrder(false), 3000);
+  };
+
   // Unified items list for Próxima Compra planning
   // We merge dataset.stock and dataset.proxCompra
   const procurementItems = useMemo(() => {
@@ -873,11 +997,48 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
               </h3>
             </div>
             <p className="text-xs text-stone-500 mt-1">
-              Inventario físico en vivo integrado con la pestaña <strong>"Stock myb"</strong>: stock disponible, costos y precios de venta.
+              Stock en vivo de la pestaña <strong>"Stock myb"</strong>. Modifica <strong>"¿Cuánto compraré?"</strong> para recalcular tu costo total y stock final.
             </p>
           </div>
 
-          {/* Quick Badges / Summary */}
+          {/* Quick Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={handleApplyMateRecommendations}
+              title="Cargar automáticamente la reposición sugerida para modelos agotados o por agotarse"
+              className="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-black flex items-center space-x-1.5 transition-colors"
+            >
+              <Zap className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Cargar Sugerencia Inteligente</span>
+            </button>
+            <button
+              onClick={handleResetMateQuantities}
+              title="Reiniciar todas las cantidades de '¿Cuánto compraré?' a 0"
+              className="p-2 rounded-xl border border-stone-200 text-stone-600 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-all cursor-pointer active:scale-90"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleCopyMateOrderWhatsApp}
+              className="px-3.5 py-2 rounded-xl bg-[#0f4b25] hover:bg-[#145d2f] text-white text-xs font-bold flex items-center space-x-1.5 shadow-sm transition-all active:scale-95"
+            >
+              {copiedMateOrder ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-300" />
+                  <span>¡Pedido Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-[#ece7d7]" />
+                  <span>Copiar Pedido WhatsApp</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Stock valuation badges */}
+        <div className="flex flex-wrap items-center gap-2 -mt-2">
           <div className="flex flex-wrap items-center gap-2">
             <div className="text-xs font-bold text-stone-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
               Valuación Venta: <strong className="text-[#0f4b25]">${matesStockSaleValuation.toLocaleString('es-AR')}</strong> ({matesStockUnits} u.)
@@ -931,159 +1092,235 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           </div>
         </div>
 
-        {/* Mobile View (md:hidden): Touch-friendly cards */}
+        {/* Mobile View (md:hidden): Touch-friendly stepper cards */}
         <div className="md:hidden space-y-2.5">
-          {filteredMates.map((mate) => {
-            const restantes = mate.restantes !== undefined ? mate.restantes : mate.cantidad;
-            const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
-            const precioCompra = mate.precioCompra || 0;
-            const ganancia = mate.gananciaUnidad || Math.max(0, precioVenta - precioCompra);
-            const isOutOfStock = restantes <= 0;
-
+          {mateProcurementItems.map((item) => {
+            const isSelected = item.userQty > 0;
             return (
               <div
-                key={mate.producto}
+                key={item.producto}
                 className={`p-3.5 rounded-2xl border space-y-2.5 ${
-                  isOutOfStock ? 'bg-stone-50/80 border-stone-200 opacity-60' : 'bg-stone-50/70 border-stone-200'
+                  isSelected ? 'bg-amber-50/50 border-amber-300' : 'bg-stone-50/70 border-stone-200'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="font-black text-stone-900 text-sm truncate">
-                      {mate.producto}
+                      {item.producto}
                     </div>
                     <div className="text-[11px] text-stone-500 flex items-center flex-wrap gap-1.5 mt-0.5">
-                      <span className="font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded text-[10px]">
-                        {mate.categoria || 'Artesanal'}
-                      </span>
+                      <span className="font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded text-[10px] uppercase">{item.categoria}</span>
                       <span>•</span>
-                      <span>{mate.comprado || 0} comp. / {mate.vendidas || 0} vend.</span>
+                      <span>Costo: ${item.costoUnitario.toLocaleString('es-AR')}</span>
+                      <span>•</span>
+                      <span>Venta: ${item.precioVenta.toLocaleString('es-AR')}</span>
                     </div>
                   </div>
                   <span className={`font-black text-xs px-2 py-0.5 rounded-lg shrink-0 ${
-                    isOutOfStock ? 'bg-stone-200 text-stone-600' : 'bg-emerald-100 text-[#0f4b25]'
+                    item.restantes === 0 ? 'bg-rose-100 text-rose-800' :
+                    item.restantes <= 1 ? 'bg-amber-100 text-amber-800' : 'bg-stone-200 text-stone-800'
                   }`}>
-                    {isOutOfStock ? 'Sin stock' : `${restantes} u. rest.`}
+                    Stock: {item.restantes} u.
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-stone-200">
+                <div className="flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-stone-200">
                   <div>
-                    <span className="text-stone-400 block text-[10px]">Precio Venta</span>
-                    <span className="font-black text-[#0f4b25] text-xs">${precioVenta.toLocaleString('es-AR')}</span>
+                    <span className="text-[10px] font-bold uppercase text-stone-400 block">¿Cuánto compraré?</span>
+                    {item.smartRecommended > 0 ? (
+                      <button
+                        onClick={() => handleMateQuantityChange(item.producto, item.smartRecommended)}
+                        className="text-[11px] font-black text-emerald-800 underline cursor-pointer"
+                      >
+                        Sugerido: +{item.smartRecommended} u.
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-stone-400">Stock suficiente</span>
+                    )}
                   </div>
-                  <div>
-                    <span className="text-stone-400 block text-[10px]">Costo</span>
-                    <span className="font-bold text-stone-700">${precioCompra.toLocaleString('es-AR')}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-stone-400 block text-[10px]">Valuación Stock</span>
-                    <span className="font-black text-stone-900">${(restantes * precioVenta).toLocaleString('es-AR')}</span>
+
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onClick={() => handleMateStepQuantity(item.producto, -1)}
+                      disabled={item.userQty <= 0}
+                      className="w-8 h-8 rounded-xl bg-stone-100 border border-stone-300 text-stone-800 font-black disabled:opacity-30 flex items-center justify-center"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.userQty}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                        handleMateQuantityChange(item.producto, isNaN(val) ? 0 : val);
+                      }}
+                      className="w-14 py-1 text-center rounded-xl border-2 border-amber-400 font-black text-sm text-stone-900 bg-white"
+                    />
+                    <button
+                      onClick={() => handleMateStepQuantity(item.producto, 1)}
+                      className="w-8 h-8 rounded-xl bg-[#0f4b25] text-white font-black flex items-center justify-center"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
+
+                {item.userQty > 0 && (
+                  <div className="flex items-center justify-between text-xs pt-0.5 px-1">
+                    <span className="text-stone-600">
+                      Quedarán: <strong>{item.totalPostCompra} u.</strong>
+                    </span>
+                    <span className="font-black text-[#e68628]">
+                      Total: ${item.costoTotalCompra.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* Desktop View (hidden md:block): TABLA IDÉNTICA A LA SUPERIOR */}
+        {/* Interactive Procurement Table (Desktop) - idéntica a la de "Stock yb" */}
         <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
               <tr>
-                <th className="py-3.5 px-3.5">Modelo / Producto</th>
+                <th className="py-3.5 px-3.5">Producto</th>
                 <th className="py-3.5 px-3.5 text-center">Stock Actual</th>
-                <th className="py-3.5 px-3.5 text-center bg-stone-100">Comprado / Vendido</th>
+                <th className="py-3.5 px-3.5 text-center bg-emerald-100/60 text-emerald-950">
+                  <div className="flex items-center justify-center space-x-1">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Recomendación Yerbazo</span>
+                  </div>
+                </th>
+                <th className="py-3.5 px-3.5 text-center bg-amber-100/70 text-amber-950 font-black">
+                  ¿Cuánto compraré? (Manual)
+                </th>
+                <th className="py-3.5 px-3.5 text-center bg-stone-100">
+                  ¿Cuántas me quedarán?
+                </th>
                 <th className="py-3.5 px-3.5 text-right">Costo Unitario</th>
-                <th className="py-3.5 px-3.5 text-right font-black bg-emerald-100/60 text-[#0f4b25]">
-                  Precio de Venta
+                <th className="py-3.5 px-3.5 text-right font-black text-[#e68628]">
+                  ¿Cuánto me saldrá comprar eso?
                 </th>
-                <th className="py-3.5 px-3.5 text-right font-bold text-[#e68628]">
-                  Margen por Unidad
-                </th>
-                <th className="py-3.5 px-3.5 text-right font-black">
-                  Valuación en Stock
-                </th>
+                <th className="py-3.5 px-3.5 text-right">Precio de Venta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
-              {filteredMates.map((mate) => {
-                const restantes = mate.restantes !== undefined ? mate.restantes : mate.cantidad;
-                const precioVenta = mate.precioVenta || mate.precioUnidad || 0;
-                const precioCompra = mate.precioCompra || 0;
-                const ganancia = mate.gananciaUnidad || Math.max(0, precioVenta - precioCompra);
-                const isOutOfStock = restantes <= 0;
-                const valorStock = restantes * precioVenta;
-
+              {mateProcurementItems.map((item) => {
+                const isSelected = item.userQty > 0;
                 return (
-                  <tr 
-                    key={mate.producto} 
+                  <tr
+                    key={item.producto}
                     className={`transition-colors ${
-                      isOutOfStock ? 'bg-stone-50/70 opacity-60' : 'hover:bg-[#fbf9f4]'
+                      isSelected ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-stone-50'
                     }`}
                   >
-                    {/* Modelo / Producto */}
+                    {/* Producto */}
                     <td className="py-3 px-3.5">
                       <div className="font-extrabold text-stone-900 text-sm">
-                        {mate.producto}
+                        {item.producto}
                       </div>
                       <div className="text-[11px] text-stone-500 flex items-center space-x-2 mt-0.5">
-                        <span className="font-semibold text-amber-800 bg-amber-100/70 px-1.5 py-0.5 rounded text-[10px] uppercase">
-                          {mate.categoria || 'Artesanal'}
-                        </span>
+                        <span className="font-semibold text-amber-800 bg-amber-100/70 px-1.5 py-0.5 rounded text-[10px] uppercase">{item.categoria}</span>
                         <span>•</span>
-                        <span>Línea artesanal Yerbazo</span>
+                        <span>{item.comprado} comp. / {item.vendidas} vend.</span>
                       </div>
                     </td>
 
                     {/* Stock Actual */}
                     <td className="py-3 px-3.5 text-center">
-                      <span className={`font-black text-xs px-2.5 py-1 rounded-xl inline-flex items-center space-x-1 ${
-                        isOutOfStock 
-                          ? 'bg-stone-200 text-stone-600' 
-                          : restantes <= 1 
-                          ? 'bg-amber-100 text-amber-900' 
-                          : 'bg-emerald-100 text-[#0f4b25]'
+                      <span className={`font-black text-sm px-2 py-0.5 rounded-lg ${
+                        item.restantes === 0 ? 'bg-rose-100 text-rose-800' :
+                        item.restantes <= 1 ? 'bg-amber-100 text-amber-800' : 'text-stone-800'
                       }`}>
-                        <span>{isOutOfStock ? 'Sin stock' : `${restantes} u.`}</span>
+                        {item.restantes} u.
                       </span>
                     </td>
 
-                    {/* Comprado / Vendido */}
-                    <td className="py-3 px-3.5 text-center bg-stone-50/50">
-                      <div className="font-bold text-stone-800">
-                        {mate.comprado || 0} <span className="font-normal text-stone-400">comp.</span>
+                    {/* Recomendación */}
+                    <td className="py-3 px-3.5 text-center bg-emerald-50/40">
+                      {item.smartRecommended > 0 ? (
+                        <button
+                          onClick={() => handleMateQuantityChange(item.producto, item.smartRecommended)}
+                          title="Hacer clic para usar esta cantidad recomendada"
+                          className="inline-flex items-center space-x-1 font-black text-xs text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-xl transition-all shadow-2xs"
+                        >
+                          <span>+{item.smartRecommended} u.</span>
+                        </button>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-stone-400">Stock suficiente</span>
+                      )}
+                    </td>
+
+                    {/* Cuánto compraré (Manual input) */}
+                    <td className="py-3 px-3.5 text-center bg-amber-50/50">
+                      <div className="inline-flex items-center space-x-1">
+                        <button
+                          onClick={() => handleMateStepQuantity(item.producto, -1)}
+                          disabled={item.userQty <= 0}
+                          className="w-7 h-7 rounded-lg bg-white border border-stone-300 text-stone-700 font-black hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.userQty}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                            handleMateQuantityChange(item.producto, isNaN(val) ? 0 : val);
+                          }}
+                          className="w-16 py-1 px-2 text-center rounded-lg border-2 border-amber-400 font-black text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#e68628] bg-white shadow-inner"
+                        />
+                        <button
+                          onClick={() => handleMateStepQuantity(item.producto, 1)}
+                          className="w-7 h-7 rounded-lg bg-white border border-stone-300 text-stone-700 font-black hover:bg-stone-100 flex items-center justify-center transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
                       </div>
-                      <div className="text-[10px] text-stone-500">
-                        {mate.vendidas || 0} vendidas
+                    </td>
+
+                    {/* Cuántas me quedarán */}
+                    <td className="py-3 px-3.5 text-center bg-stone-50">
+                      <div className="font-black text-sm text-stone-900">
+                        {item.totalPostCompra} <span className="font-normal text-stone-400 text-xs">u.</span>
                       </div>
+                      {item.userQty > 0 && (
+                        <div className="text-[10px] font-bold text-emerald-700">
+                          (+{item.userQty} nuevas)
+                        </div>
+                      )}
                     </td>
 
                     {/* Costo Unitario */}
-                    <td className="py-3 px-3.5 text-right font-semibold text-stone-600">
-                      ${precioCompra.toLocaleString('es-AR')}
+                    <td className="py-3 px-3.5 text-right font-medium text-stone-600">
+                      ${item.costoUnitario.toLocaleString('es-AR')}
+                    </td>
+
+                    {/* Cuánto me saldrá comprar eso */}
+                    <td className="py-3 px-3.5 text-right">
+                      <div className="font-black text-sm text-[#e68628]">
+                        ${item.costoTotalCompra.toLocaleString('es-AR')}
+                      </div>
+                      {item.userQty > 0 && (
+                        <div className="text-[10px] text-emerald-700 font-semibold">
+                          Ganancia: +${item.gananciaProyectadaCompra.toLocaleString('es-AR')}
+                        </div>
+                      )}
                     </td>
 
                     {/* Precio de Venta */}
-                    <td className="py-3 px-3.5 text-right bg-emerald-50/50 font-black text-sm text-[#0f4b25]">
-                      ${precioVenta.toLocaleString('es-AR')}
-                    </td>
-
-                    {/* Margen por Unidad */}
                     <td className="py-3 px-3.5 text-right">
-                      <div className="font-black text-xs text-[#e68628]">
-                        +${ganancia.toLocaleString('es-AR')}
+                      <div className="font-black text-sm text-[#0f4b25]">
+                        ${item.precioVenta.toLocaleString('es-AR')}
                       </div>
-                      <div className="text-[10px] text-emerald-700 font-semibold">
-                        {mate.porcentajeGanancia > 0 ? `+${mate.porcentajeGanancia.toFixed(1)}%` : '-'}
+                      <div className="text-[10px] text-stone-500">
+                        Margen: +${Math.max(0, item.precioVenta - item.costoUnitario).toLocaleString('es-AR')} c/u
                       </div>
                     </td>
-
-                    {/* Valuación en Stock */}
-                    <td className="py-3 px-3.5 text-right font-black text-sm text-stone-900">
-                      ${valorStock.toLocaleString('es-AR')}
-                    </td>
-
                   </tr>
                 );
               })}
@@ -1091,38 +1328,48 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           </table>
         </div>
 
-        {/* Resumen Total Footer Bar (idéntico a la barra resumen superior) */}
+        {/* Purchase Summary Bar (idéntica a la superior) */}
         <div className="bg-[#f7f5ed] p-4 sm:p-5 rounded-2xl border-2 border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <h4 className="font-black text-sm text-stone-900 uppercase tracking-wider font-display">
-              Resumen Total de Mates & Bombillas en Stock
+              Resumen Total de tu Próxima Orden de Mates & Bombillas
             </h4>
             <p className="text-xs text-stone-600">
-              Total de <strong>{matesStockUnits} unidades físicas</strong> distribuidas en <strong>{dataset.matesBombillas.filter(m => (m.restantes !== undefined ? m.restantes : m.cantidad) > 0).length} modelos</strong> disponibles.
+              Comprarás <strong>{totalMateUserUnits} unidades</strong> de <strong>{allMateOrderItems.length} productos</strong> distintos.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-right">
             <div>
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Costo Total Invertido</span>
-              <span className="text-xl sm:text-2xl font-black text-stone-700 font-display">
-                ${matesStockCostValuation.toLocaleString('es-AR')}
-              </span>
-            </div>
-
-            <div className="border-l border-stone-300 pl-4">
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Valuación en Venta</span>
-              <span className="text-xl sm:text-2xl font-black text-[#0f4b25] font-display">
-                ${matesStockSaleValuation.toLocaleString('es-AR')}
-              </span>
-            </div>
-
-            <div className="border-l border-stone-300 pl-4">
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Ganancia Proyectada</span>
+              <span className="text-[10px] uppercase font-bold text-stone-400 block">Total a Pagar al Proveedor</span>
               <span className="text-xl sm:text-2xl font-black text-[#e68628] font-display">
-                +${(matesStockSaleValuation - matesStockCostValuation).toLocaleString('es-AR')}
+                ${totalMateUserCost.toLocaleString('es-AR')}
               </span>
             </div>
+
+            <div className="border-l border-stone-300 pl-4">
+              <span className="text-[10px] uppercase font-bold text-stone-400 block">Ganancia Proyectada al Vender</span>
+              <span className="text-xl sm:text-2xl font-black text-[#0f4b25] font-display">
+                +${totalMateUserProfit.toLocaleString('es-AR')}
+              </span>
+            </div>
+
+            <button
+              onClick={handleCopyMateOrderWhatsApp}
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-[#0f4b25] hover:bg-[#145d2f] text-white text-xs font-extrabold flex items-center space-x-1.5 shadow-md transition-all active:scale-95"
+            >
+              {copiedMateOrder ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-300" />
+                  <span>¡Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-[#ece7d7]" />
+                  <span>Copiar Pedido para WhatsApp</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
