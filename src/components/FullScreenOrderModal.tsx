@@ -138,7 +138,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
   const [customFinalPrice, setCustomFinalPrice] = useState<string>('');
   const [isPriceManuallyEdited, setIsPriceManuallyEdited] = useState<boolean>(false);
   const [productSearch, setProductSearch] = useState('');
-  const [productCatFilter, setProductCatFilter] = useState<'TODOS' | '1 KG' | '500 G' | 'Accesorios'>('TODOS');
+  const [productCatFilter, setProductCatFilter] = useState<'TODOS' | '1 KG' | '500 G' | 'Stock myb' | 'Accesorios'>('TODOS');
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeletingOrder, setIsDeletingOrder] = useState(false);
@@ -159,6 +159,38 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
     }
     return map;
   }, [dataset.clientes]);
+
+  // Unified catalog combining "Stock" (Yerbas & Accesorios) + "Stock myb" (Mates, Bombillas y Canastas)
+  const orderableCatalog = useMemo<CatalogProduct[]>(() => {
+    const existingNames = new Set(dataset.stock.map(s => s.nombre.toLowerCase().trim()));
+    const mybProducts: CatalogProduct[] = (dataset.matesBombillas || [])
+      .filter(m => m.producto && !existingNames.has(m.producto.toLowerCase().trim()))
+      .map((m, idx) => {
+        const restantes = m.restantes !== undefined ? m.restantes : m.cantidad;
+        const precioVenta = m.precioVenta || m.precioUnidad || 0;
+        const precioCompra = m.precioCompra || 0;
+        return {
+          id: `myb-${idx}-${m.producto}`,
+          nombre: m.producto,
+          nombreNormalizado: m.producto.toLowerCase().trim(),
+          categoria: 'Mates y Bombillas',
+          marca: 'Stock myb',
+          peso: m.categoria || 'Mate',
+          comprado: m.comprado || restantes,
+          vendidas: m.vendidas || 0,
+          restantes,
+          precioCompra,
+          precioVenta,
+          precioViejo: precioVenta,
+          gastoTotal: m.valorCosto || restantes * precioCompra,
+          gananciaVendiendoTodo: m.gananciaTotal || restantes * Math.max(0, precioVenta - precioCompra),
+          gananciaUnidad: m.gananciaUnidad || Math.max(0, precioVenta - precioCompra),
+          gananciaRealizada: (m.vendidas || 0) * Math.max(0, precioVenta - precioCompra),
+          porcentajeGanancia: m.porcentajeGanancia || (precioCompra > 0 ? ((precioVenta - precioCompra) / precioCompra) * 100 : 0)
+        };
+      });
+    return [...dataset.stock, ...mybProducts];
+  }, [dataset.stock, dataset.matesBombillas]);
 
   // Populate form when opening in Edit Mode or New Mode
   useEffect(() => {
@@ -192,7 +224,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
       const fallbackUnitPrice = Math.round((editingOrder.precioSistema || editingOrder.precioFinal) / totalQty);
 
       const mappedItems: NewOrderItemInput[] = editingOrder.items.map(it => {
-        const cat = dataset.stock.find(
+        const cat = orderableCatalog.find(
           s => s.nombre.toLowerCase().trim() === it.producto.toLowerCase().trim()
         );
         return {
@@ -302,16 +334,21 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
 
   const filteredCatalog = useMemo(() => {
     const q = productSearch.toLowerCase().trim();
-    return dataset.stock.filter(p => {
-      const matchSearch = !q || p.nombre.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q);
+    return orderableCatalog.filter(p => {
+      const matchSearch =
+        !q ||
+        p.nombre.toLowerCase().includes(q) ||
+        p.marca.toLowerCase().includes(q) ||
+        p.peso.toLowerCase().includes(q);
       const matchCat =
         productCatFilter === 'TODOS' ||
         (productCatFilter === '1 KG' && p.peso === '1 KG') ||
         (productCatFilter === '500 G' && p.peso === '500 G') ||
-        (productCatFilter === 'Accesorios' && p.categoria !== 'Yerbas');
+        (productCatFilter === 'Stock myb' && (p.marca === 'Stock myb' || p.categoria === 'Mates y Bombillas')) ||
+        (productCatFilter === 'Accesorios' && p.categoria !== 'Yerbas' && p.marca !== 'Stock myb');
       return matchSearch && matchCat;
     });
-  }, [dataset.stock, productSearch, productCatFilter]);
+  }, [orderableCatalog, productSearch, productCatFilter]);
 
   const handleAddProductToOrder = (prod: CatalogProduct) => {
     setOrderItems(prev => {

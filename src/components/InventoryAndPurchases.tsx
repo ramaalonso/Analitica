@@ -37,8 +37,6 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   dataset,
   performances
 }) => {
-  const [stockSearch, setStockSearch] = useState('');
-  const [stockStatusFilter, setStockStatusFilter] = useState<'ALL' | 'CRITICAL' | 'ALERT' | 'HEALTHY' | 'OUT'>('ALL');
   const [targetCoverageDays, setTargetCoverageDays] = useState<number>(30); // 30 days coverage target
   const [copiedOrder, setCopiedOrder] = useState<boolean>(false);
   const [purchaseFilter, setPurchaseFilter] = useState<'ALL' | 'ONLY_BUY' | 'CRITICAL'>('ALL');
@@ -284,20 +282,6 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
   const totalUserProfit = procurementItems.reduce((acc, item) => acc + item.gananciaProyectadaCompra, 0);
   const totalItemsToBuyCount = procurementItems.filter(item => item.userQty > 0).length;
 
-  // Stock status items for bottom table
-  const enrichedStock = procurementItems.map(item => ({
-    id: item.producto,
-    nombre: item.producto,
-    comprado: dataset.stock.find(s => s.nombre === item.producto)?.comprado || 0,
-    vendidas: dataset.stock.find(s => s.nombre === item.producto)?.vendidas || 0,
-    restantes: item.restantes,
-    precioCompra: item.costoUnitario,
-    precioVenta: item.precioVenta,
-    diasCobertura: item.diasCoberturaActual,
-    velocidadSemanal: item.velocidadSemanal,
-    status: item.status
-  }));
-
   // Imminent demand from Repurchase Radar
   const radarClients = useMemo(() => {
     return analyzeRepurchaseRadar(dataset, dataset.stock, dataset.webStore);
@@ -337,13 +321,7 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
     return list.sort((a, b) => b.missing - a.missing);
   }, [imminentDemandByProduct, dataset.stock]);
 
-  const criticalItems = enrichedStock.filter(i => i.status === 'CRITICAL' || i.status === 'OUT');
-
-  const filteredStock = enrichedStock.filter(item => {
-    const matchSearch = item.nombre.toLowerCase().includes(stockSearch.toLowerCase());
-    const matchStatus = stockStatusFilter === 'ALL' || item.status === stockStatusFilter;
-    return matchSearch && matchStatus;
-  });
+  const criticalItems = procurementItems.filter(i => i.status === 'CRITICAL' || i.status === 'OUT');
 
   // Filter for procurement table
   const filteredProcurement = procurementItems.filter(item => {
@@ -1373,141 +1351,6 @@ export const InventoryAndPurchases: React.FC<InventoryAndPurchasesProps> = ({
           </div>
         </div>
 
-      </div>
-
-      {/* Detailed Stock Inventory Table */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-stone-200">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div>
-            <h3 className="text-base sm:text-xl font-black text-stone-900 font-display">
-              Existencias Físicas & Días de Cobertura
-            </h3>
-            <p className="hidden sm:block text-xs text-stone-500">
-              Cálculo de autonomía restante según la velocidad semanal de venta
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[180px]">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Buscar artículo..."
-                value={stockSearch}
-                onChange={(e) => setStockSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-stone-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0f4b25]"
-              />
-            </div>
-
-            <select
-              value={stockStatusFilter}
-              onChange={(e) => setStockStatusFilter(e.target.value as any)}
-              className="px-3 py-1.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 bg-stone-50 focus:outline-none cursor-pointer"
-            >
-              <option value="ALL">Estado: Todos</option>
-              <option value="CRITICAL">🔴 Crítico (&lt; 7 días)</option>
-              <option value="ALERT">🟡 Atención (7-15 días)</option>
-              <option value="HEALTHY">🟢 Óptimo (&gt; 15 días)</option>
-              <option value="OUT">Agotado (0 u.)</option>
-            </select>
-          </div>
-        </div>
-
-        {/* MOBILE STOCK CARDS (md:hidden) */}
-        <div className="md:hidden grid grid-cols-1 gap-2.5">
-          {filteredStock.map((item) => (
-            <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="font-black text-stone-900 text-sm truncate">
-                  {item.nombre}
-                </div>
-                <span className={`font-black text-xs px-2 py-0.5 rounded-lg shrink-0 ${
-                  item.restantes === 0 ? 'bg-rose-100 text-rose-700' :
-                  item.restantes <= 4 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-[#0f4b25]'
-                }`}>
-                  {item.restantes} u. rest.
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-[11px] bg-white p-2 rounded-xl border border-stone-200/80">
-                <div>
-                  <span className="text-stone-400 block text-[10px]">Costo / Venta</span>
-                  <span className="font-bold text-stone-800">${item.precioCompra.toLocaleString('es-AR')}</span>
-                  <span className="text-stone-400"> → </span>
-                  <span className="font-black text-[#0f4b25]">${item.precioVenta.toLocaleString('es-AR')}</span>
-                </div>
-                <div>
-                  <span className="text-stone-400 block text-[10px]">Vendidas</span>
-                  <span className="font-bold text-stone-800">{item.vendidas} / {item.comprado} u.</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-stone-400 block text-[10px]">Autonomía</span>
-                  <span className="font-extrabold text-stone-800">
-                    {item.status === 'OUT' ? 'Agotado' : `~${item.diasCobertura}d`}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="hidden md:block overflow-x-auto rounded-2xl border border-stone-200">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#f7f5ed] text-stone-700 font-extrabold uppercase tracking-wider text-[11px] border-b border-stone-200">
-              <tr>
-                <th className="py-3 px-3.5">Producto</th>
-                <th className="py-3 px-3.5">Comprado Histórico</th>
-                <th className="py-3 px-3.5">Vendido Histórico</th>
-                <th className="py-3 px-3.5">Stock Restante</th>
-                <th className="py-3 px-3.5">Costo Unitario</th>
-                <th className="py-3 px-3.5">Precio Venta</th>
-                <th className="py-3 px-3.5">Ritmo Semanal</th>
-                <th className="py-3 px-3.5">Autonomía / Cobertura</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-200">
-              {filteredStock.map((item) => (
-                <tr key={item.id} className="hover:bg-stone-50 transition-colors">
-                  <td className="py-3 px-3.5 font-bold text-stone-900">
-                    {item.nombre}
-                  </td>
-                  <td className="py-3 px-3.5 text-stone-600 font-medium">
-                    {item.comprado} u.
-                  </td>
-                  <td className="py-3 px-3.5 text-stone-600 font-medium">
-                    {item.vendidas} u.
-                  </td>
-                  <td className="py-3 px-3.5">
-                    <span className={`font-black text-sm ${
-                      item.restantes === 0 ? 'text-rose-600' :
-                      item.restantes <= 4 ? 'text-amber-600' : 'text-[#0f4b25]'
-                    }`}>
-                      {item.restantes} u.
-                    </span>
-                  </td>
-                  <td className="py-3 px-3.5 text-stone-600 font-medium">
-                    ${item.precioCompra.toLocaleString('es-AR')}
-                  </td>
-                  <td className="py-3 px-3.5 font-extrabold text-[#0f4b25]">
-                    ${item.precioVenta.toLocaleString('es-AR')}
-                  </td>
-                  <td className="py-3 px-3.5 text-stone-700 font-semibold">
-                    ~{item.velocidadSemanal} u./sem
-                  </td>
-                  <td className="py-3 px-3.5">
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-lg ${
-                      item.status === 'OUT' ? 'bg-stone-200 text-stone-600' :
-                      item.status === 'CRITICAL' ? 'bg-rose-100 text-rose-900' :
-                      item.status === 'ALERT' ? 'bg-amber-100 text-amber-900' :
-                      'bg-emerald-100 text-emerald-900'
-                    }`}>
-                      {item.status === 'OUT' ? 'Agotado' : `~${item.diasCobertura} días de stock`}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
 
     </div>

@@ -446,6 +446,10 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
       ...(baseRawData.stock || {}),
       rows: (baseRawData.stock?.rows || []).map((r: string[]) => [...r])
     },
+    mates_bombillas: {
+      ...(baseRawData.mates_bombillas || {}),
+      rows: (baseRawData.mates_bombillas?.rows || []).map((r: string[]) => [...r])
+    },
     clientes: {
       ...(baseRawData.clientes || {}),
       rows: (baseRawData.clientes?.rows || []).map((r: string[]) => [...r])
@@ -492,7 +496,7 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
     const newRow = buildSheetRowFromOrder(lo, true);
     rawData.ventas.rows.push(newRow);
 
-    // Adjust Stock counts (Vendidas & Restantes) for this pending order
+    // Adjust Stock counts (Vendidas & Restantes) in both "Stock" and "Stock myb" for this pending order
     for (const item of lo.items) {
       const itemNorm = normalizeProductName(item.producto);
       const stockRow = rawData.stock.rows.find(
@@ -503,6 +507,16 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
         const prevRestantes = parseInt(stockRow[3] || '0', 10) || 0;
         stockRow[2] = String(prevVendidas + item.cantidad);
         stockRow[3] = String(Math.max(0, prevRestantes - item.cantidad));
+      } else {
+        const mybRow = rawData.mates_bombillas.rows.find(
+          (mr: string[], idx: number) => idx > 0 && normalizeProductName(mr?.[0] || '') === itemNorm
+        );
+        if (mybRow && mybRow.length >= 4) {
+          const prevVendidas = parseInt(mybRow[2] || '0', 10) || 0;
+          const prevRestantes = parseInt(mybRow[3] || '0', 10) || 0;
+          mybRow[2] = String(prevVendidas + item.cantidad);
+          mybRow[3] = String(Math.max(0, prevRestantes - item.cantidad));
+        }
       }
     }
   }
@@ -577,6 +591,16 @@ export function applyLocalChangesToRawData(baseRawData: any, isFromLiveSheet = f
               const prevRestantes = parseInt(stockRow[3] || '0', 10) || 0;
               stockRow[2] = String(Math.max(0, prevVendidas - qty));
               stockRow[3] = String(prevRestantes + qty);
+            } else {
+              const mybRow = rawData.mates_bombillas.rows.find(
+                (mr: string[], idx: number) => idx > 0 && normalizeProductName(mr?.[0] || '') === itemNorm
+              );
+              if (mybRow && mybRow.length >= 4) {
+                const prevVendidas = parseInt(mybRow[2] || '0', 10) || 0;
+                const prevRestantes = parseInt(mybRow[3] || '0', 10) || 0;
+                mybRow[2] = String(Math.max(0, prevVendidas - qty));
+                mybRow[3] = String(prevRestantes + qty);
+              }
             }
           }
         }
