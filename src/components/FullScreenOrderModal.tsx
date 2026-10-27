@@ -433,7 +433,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
       const fallbackUnitPrice = Math.round((editingOrder.precioSistema || editingOrder.precioFinal) / totalQty);
       setOrderItems(
         editingOrder.items.map(it => {
-          const cat = dataset.stock.find(
+          const cat = orderableCatalog.find(
             s => s.nombre.toLowerCase().trim() === it.producto.toLowerCase().trim()
           );
           return {
@@ -917,7 +917,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                     <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                       <span className="text-[10px] font-bold text-stone-500">Sumar favorita en 1 toque:</span>
                       {selectedClientRecord.productosFavoritos.map(fav => {
-                        const catProd = dataset.stock.find(
+                        const catProd = orderableCatalog.find(
                           s => s.nombre.toLowerCase().trim() === fav.toLowerCase().trim()
                         );
                         if (!catProd) return null;
