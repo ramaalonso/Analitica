@@ -1003,25 +1003,29 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                         : `Seleccionar Productos (${orderItems.length}/5 variedades • ${totalSelectedUnits} u.)`}
                     </h3>
                     <p className="text-[11px] text-stone-500">
-                      Tocá cualquier producto del catálogo para sumarlo o ajustar cantidades con - / +
+                      Yerbas de &quot;Stock&quot; + Mates, Bombillas y Canastas de &quot;Stock myb&quot;
                     </p>
                   </div>
                 </div>
 
                 {/* Category Filter Pills */}
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-                  {(['TODOS', '1 KG', '500 G', 'Accesorios'] as const).map(cat => (
+                  {(['TODOS', '1 KG', '500 G', 'Stock myb', 'Accesorios'] as const).map(cat => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setProductCatFilter(cat)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer transition-all shrink-0 ${
                         productCatFilter === cat
-                          ? 'bg-[#0f4b25] text-[#ece7d7] shadow-2xs'
+                          ? cat === 'Stock myb'
+                            ? 'bg-[#e68628] text-stone-950 shadow-2xs'
+                            : 'bg-[#0f4b25] text-[#ece7d7] shadow-2xs'
+                          : cat === 'Stock myb'
+                          ? 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
                           : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                       }`}
                     >
-                      {cat}
+                      {cat === 'Stock myb' ? `🧉 Stock myb (${dataset.matesBombillas?.length || 0})` : cat}
                     </button>
                   ))}
                 </div>
@@ -1034,7 +1038,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                   type="text"
                   value={productSearch}
                   onChange={e => setProductSearch(e.target.value)}
-                  placeholder="Buscar yerba, mate o bombilla (ej: Canarias, Baldo, Rei Verde, Serena)..."
+                  placeholder="Buscar yerba, torpedo, imperial, bombillón, canasta (ej: Canarias, Baldo, Imperial, Bombillón)..."
                   className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0f4b25]"
                 />
                 {productSearch && (
@@ -1053,6 +1057,7 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                 {filteredCatalog.map(prod => {
                   const inCart = orderItems.find(i => i.producto.toLowerCase() === prod.nombre.toLowerCase());
                   const outOfStock = prod.restantes <= 0 && !inCart;
+                  const isStockMyb = prod.marca === 'Stock myb';
 
                   return (
                     <div
@@ -1063,20 +1068,29 @@ export const FullScreenOrderModal: React.FC<FullScreenOrderModalProps> = ({
                           ? 'bg-emerald-50/70 border-[#0f4b25] ring-2 ring-[#0f4b25]/15 shadow-xs'
                           : outOfStock
                           ? 'bg-stone-50 border-stone-200 opacity-65 hover:opacity-100'
+                          : isStockMyb
+                          ? 'bg-amber-50/35 hover:bg-amber-50/70 border-amber-200/90 hover:border-amber-400'
                           : 'bg-white hover:bg-[#f7f5ed]/70 border-stone-200 hover:border-stone-300'
                       }`}
                     >
                       <div>
-                        <div className="flex items-start justify-between gap-1">
-                          <span className={`text-[9px] sm:text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
-                            prod.restantes <= 0
-                              ? 'bg-rose-100 text-rose-700'
-                              : prod.restantes <= 4
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100/80 text-emerald-800'
-                          }`}>
-                            Stock: {prod.restantes}
-                          </span>
+                        <div className="flex items-start justify-between gap-1 flex-wrap">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span className={`text-[9px] sm:text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                              prod.restantes <= 0
+                                ? 'bg-rose-100 text-rose-700'
+                                : prod.restantes <= 4
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100/80 text-emerald-800'
+                            }`}>
+                              Stock: {prod.restantes}
+                            </span>
+                            {isStockMyb && (
+                              <span className="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-amber-200/80 text-amber-950">
+                                🧉 {prod.peso}
+                              </span>
+                            )}
+                          </div>
                           {inCart && (
                             <span className="bg-[#0f4b25] text-[#e68628] text-[10px] font-black px-1.5 py-0.5 rounded-md">
                               ${(inCart.cantidad * prod.precioVenta).toLocaleString('es-AR')}

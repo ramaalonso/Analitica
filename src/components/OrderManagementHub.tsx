@@ -199,7 +199,7 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
   const [customFinalPrice, setCustomFinalPrice] = useState<string>('');
   const [isPriceManuallyEdited, setIsPriceManuallyEdited] = useState<boolean>(false);
   const [productSearch, setProductSearch] = useState('');
-  const [productCatFilter, setProductCatFilter] = useState<'TODOS' | '1 KG' | '500 G' | 'Accesorios'>('TODOS');
+  const [productCatFilter, setProductCatFilter] = useState<'TODOS' | '1 KG' | '500 G' | 'Stock myb' | 'Accesorios'>('TODOS');
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const [lastCreatedOrder, setLastCreatedOrder] = useState<NewOrderPayload | null>(null);
   const [copiedLastOrderRow, setCopiedLastOrderRow] = useState(false);
@@ -385,19 +385,56 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
     return (calculatedProfit / finalPriceNumber) * 100;
   }, [calculatedProfit, finalPriceNumber]);
 
+  // Unified catalog combining "Stock" + "Stock myb"
+  const orderableCatalog = useMemo<CatalogProduct[]>(() => {
+    const existingNames = new Set(dataset.stock.map(s => s.nombre.toLowerCase().trim()));
+    const mybProducts: CatalogProduct[] = (dataset.matesBombillas || [])
+      .filter(m => m.producto && !existingNames.has(m.producto.toLowerCase().trim()))
+      .map((m, idx) => {
+        const restantes = m.restantes !== undefined ? m.restantes : m.cantidad;
+        const precioVenta = m.precioVenta || m.precioUnidad || 0;
+        const precioCompra = m.precioCompra || 0;
+        return {
+          id: `myb-${idx}-${m.producto}`,
+          nombre: m.producto,
+          nombreNormalizado: m.producto.toLowerCase().trim(),
+          categoria: 'Mates y Bombillas',
+          marca: 'Stock myb',
+          peso: m.categoria || 'Mate',
+          comprado: m.comprado || restantes,
+          vendidas: m.vendidas || 0,
+          restantes,
+          precioCompra,
+          precioVenta,
+          precioViejo: precioVenta,
+          gastoTotal: m.valorCosto || restantes * precioCompra,
+          gananciaVendiendoTodo: m.gananciaTotal || restantes * Math.max(0, precioVenta - precioCompra),
+          gananciaUnidad: m.gananciaUnidad || Math.max(0, precioVenta - precioCompra),
+          gananciaRealizada: (m.vendidas || 0) * Math.max(0, precioVenta - precioCompra),
+          porcentajeGanancia: m.porcentajeGanancia || (precioCompra > 0 ? ((precioVenta - precioCompra) / precioCompra) * 100 : 0)
+        };
+      });
+    return [...dataset.stock, ...mybProducts];
+  }, [dataset.stock, dataset.matesBombillas]);
+
   // Filtered catalog products for the order builder
   const filteredCatalog = useMemo(() => {
     const q = productSearch.toLowerCase().trim();
-    return dataset.stock.filter(p => {
-      const matchSearch = !q || p.nombre.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q);
+    return orderableCatalog.filter(p => {
+      const matchSearch =
+        !q ||
+        p.nombre.toLowerCase().includes(q) ||
+        p.marca.toLowerCase().includes(q) ||
+        p.peso.toLowerCase().includes(q);
       const matchCat =
         productCatFilter === 'TODOS' ||
         (productCatFilter === '1 KG' && p.peso === '1 KG') ||
         (productCatFilter === '500 G' && p.peso === '500 G') ||
-        (productCatFilter === 'Accesorios' && p.categoria !== 'Yerbas');
+        (productCatFilter === 'Stock myb' && (p.marca === 'Stock myb' || p.categoria === 'Mates y Bombillas')) ||
+        (productCatFilter === 'Accesorios' && p.categoria !== 'Yerbas' && p.marca !== 'Stock myb');
       return matchSearch && matchCat;
     });
-  }, [dataset.stock, productSearch, productCatFilter]);
+  }, [orderableCatalog, productSearch, productCatFilter]);
 
   // Add or increment product in New Order Cart
   const handleAddProductToOrder = (prod: CatalogProduct) => {
@@ -1466,19 +1503,19 @@ export const OrderManagementHub: React.FC<OrderManagementHubProps> = ({
               </div>
 
               {/* Category Pills */}
-              <div className="flex items-center gap-1">
-                {(['TODOS', '1 KG', '500 G', 'Accesorios'] as const).map(cat => (
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                {(['TODOS', '1 KG', '500 G', 'Stock myb', 'Accesorios'] as const).map(cat => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setProductCatFilter(cat)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold cursor-pointer transition-all ${
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold cursor-pointer transition-all shrink-0 ${
                       productCatFilter === cat
                         ? 'bg-[#0f4b25] text-white'
                         : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                     }`}
                   >
-                    {cat}
+                    {cat === 'Stock myb' ? '🧉 Stock myb' : cat}
                   </button>
                 ))}
               </div>
